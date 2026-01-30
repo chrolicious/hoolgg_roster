@@ -1,10 +1,10 @@
-# Hool.gg Roster - WoW Character Tracker
+# Hool.gg //Roster - Character & Crafting Progression Tracker
 
-A character progression tracker for World of Warcraft's Midnight expansion. Available as both a desktop application and web app. Part of the Hool.gg ecosystem.
+A comprehensive progression tracker for World of Warcraft's Midnight expansion. Track gear, crests, professions, and weekly tasks across multiple characters. Available as both a desktop application and web app.
 
 ## 🖥️ Desktop App (Recommended)
 
-**[Download Latest Release](https://github.com/YOUR_USERNAME/midnight_tracker/releases/latest)**
+**[Download Latest Release](https://github.com/chrolicious/hoolgg_roster/releases/latest)**
 
 The desktop app provides:
 - ✅ **One-Click Install** - No Python or technical setup required
