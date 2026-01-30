@@ -5,6 +5,14 @@ All notable changes to Hool.gg Roster will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-01-30
+
+### 🔧 CI/CD Improvements
+
+- **GitHub Actions Fix**: Fixed automated build workflow to properly bundle Python
+- **Embedded Python**: Configured pip installation in embedded Python distribution
+- **Automated Releases**: Validated full CI/CD pipeline with automated builds
+
 ## [0.1.0-rev3] - 2026-01-30
 
 ### 🎨 Branding Updates
