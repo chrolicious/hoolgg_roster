@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "current_week": 0,
+    "last_updated": "2026-01-30T00:00:00Z"
+  },
+  "blizzard_config": {
+    "client_id": "",
+    "client_secret": "",
+    "region": "us",
+    "access_token": "",
+    "token_expires": null
+  },
+  "characters": []
+}

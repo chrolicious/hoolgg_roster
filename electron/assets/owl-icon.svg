@@ -1,0 +1,111 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg-circle { fill: #1a2332; }
+      .owl-fill { fill: #FFFFFF; }
+      .owl-stroke { fill: none; stroke: #FFFFFF; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+      .owl-accent { fill: #6BB3FF; }
+    </style>
+  </defs>
+
+  <!-- Dark background circle -->
+  <circle cx="256" cy="256" r="240" class="bg-circle"/>
+
+  <!-- Base head shape with bold outline -->
+  <g>
+    <!-- Outer head silhouette -->
+    <path class="owl-fill" d="
+      M256,80
+      L280,90 L300,85 L320,75 L340,70
+      L360,75 L375,90 L390,110
+      L400,135 L405,165 L408,200
+      L408,240 L405,280 L398,315
+      L388,345 L375,370 L358,390
+      L338,405 L315,415 L290,420
+      L256,422
+      L222,420 L197,415 L174,405
+      L154,390 L137,370 L124,345
+      L114,315 L107,280 L104,240
+      L104,200 L107,165 L110,135
+      L122,110 L137,90 L152,75
+      L172,70 L192,75 L212,85
+      L232,90 Z
+    "/>
+
+    <!-- Left ear tuft with jagged edges -->
+    <path class="owl-fill" d="
+      M160,90
+      L165,60 L170,70 L175,50 L180,65 L185,45 L190,60 L195,50 L200,75
+      L190,85 L180,88 L170,87 Z
+    "/>
+
+    <!-- Right ear tuft with jagged edges -->
+    <path class="owl-fill" d="
+      M352,90
+      L347,60 L342,70 L337,50 L332,65 L327,45 L322,60 L317,50 L312,75
+      L322,85 L332,88 L342,87 Z
+    "/>
+
+    <!-- Left eye outer with bold outline -->
+    <ellipse cx="200" cy="220" rx="45" ry="55" class="owl-fill"/>
+    <ellipse cx="200" cy="220" rx="38" ry="48" fill="#1a2332"/>
+
+    <!-- Right eye outer with bold outline -->
+    <ellipse cx="312" cy="220" rx="45" ry="55" class="owl-fill"/>
+    <ellipse cx="312" cy="220" rx="38" ry="48" fill="#1a2332"/>
+
+    <!-- Left pupil - accent color -->
+    <ellipse cx="200" cy="225" rx="18" ry="22" class="owl-accent"/>
+
+    <!-- Right pupil - accent color -->
+    <ellipse cx="312" cy="225" rx="18" ry="22" class="owl-accent"/>
+
+    <!-- Fierce eyebrows -->
+    <path class="owl-stroke" stroke-width="10" d="M168,190 L185,200 L200,198"/>
+    <path class="owl-stroke" stroke-width="10" d="M344,190 L327,200 L312,198"/>
+
+    <!-- Beak - angular and bold -->
+    <path class="owl-accent" d="
+      M256,240
+      L275,260 L280,280 L278,300 L270,315 L256,325
+      L242,315 L234,300 L232,280 L237,260 Z
+    "/>
+    <path class="owl-accent" d="M245,300 L256,305 L267,300 L256,310 Z" fill="#4a8cd5"/>
+
+    <!-- Facial disc pattern - left -->
+    <path class="owl-fill" d="
+      M135,170
+      L125,185 L118,210 L115,240 L118,270 L125,295 L138,315
+      L128,310 L118,290 L110,260 L108,220 L112,185 L120,160 Z
+    "/>
+
+    <!-- Facial disc pattern - right -->
+    <path class="owl-fill" d="
+      M377,170
+      L387,185 L394,210 L397,240 L394,270 L387,295 L374,315
+      L384,310 L394,290 L402,260 L404,220 L400,185 L392,160 Z
+    "/>
+
+    <!-- Chest feathers with jagged edges -->
+    <path class="owl-fill" d="
+      M220,350
+      L225,360 L220,370 L228,375 L222,385 L230,390
+      L235,400 L245,405 L256,408
+      L267,405 L277,400 L282,390
+      L290,385 L284,375 L292,370 L287,360 L292,350
+      L280,355 L270,352 L256,350 L242,352 L232,355 Z
+    "/>
+
+    <!-- Wing detail left - sharp chevrons -->
+    <path class="owl-stroke" stroke-width="10" d="
+      M135,320 L115,340 L105,360
+      M125,355 L105,375 L95,395
+    "/>
+
+    <!-- Wing detail right - sharp chevrons -->
+    <path class="owl-stroke" stroke-width="10" d="
+      M377,320 L397,340 L407,360
+      M387,355 L407,375 L417,395
+    "/>
+  </g>
+</svg>
