@@ -82,16 +82,16 @@
   - [x] Test DevTools console for Node APIs (should be undefined)
 
 ## 5. Asset Creation
-- [ ] 5.1 Create application icon (📝 Documented in assets/ICONS_README.md)
-  - [ ] Design or source Hool.gg branded icon (256x256px)
-  - [ ] Convert to .ico format (16, 32, 48, 256 sizes)
-  - [ ] Save as `electron/assets/icon.ico`
-- [ ] 5.2 Create system tray icon (📝 Documented in assets/ICONS_README.md)
-  - [ ] Create 16x16 and 32x32 versions
-  - [ ] Save as `electron/assets/tray-icon.ico`
+- [x] 5.1 Create application icon
+  - [x] Design custom owl-head branded icon
+  - [x] Convert to .ico format (16, 32, 48, 64, 128, 256 sizes)
+  - [x] Save as `electron/assets/icon.ico`
+- [x] 5.2 Create system tray icon
+  - [x] Created from custom owl icon
+  - [x] Save as `electron/assets/tray-icon.ico`
 - [x] 5.3 Set icon paths in build config
   - [x] Update `package.json` build.win.icon
-  - [x] Update `package.json` build.nsis.installerIcon
+  - [x] Update `package.json` build.icon
 
 ## 6. Python Bundling (📝 Complete guide in PYTHON_BUNDLING.md)
 - [ ] 6.1 Download Python 3.11 embedded for Windows x64
@@ -198,16 +198,16 @@
 
 ## 11. Release Preparation
 - [x] 11.1 Version alignment
-  - [x] Set version in `electron/package.json` to `1.0.0`
+  - [x] Set version in `electron/package.json` to `0.1.0-rev2`
   - [x] Ensure version consistency across docs
-- [ ] 11.2 Create GitHub repository (if not exists)
-  - [ ] Make repository public (required for auto-updates)
-  - [ ] Add description and topics
-  - [ ] Enable Releases feature
-- [ ] 11.3 Update package.json repository URLs
-  - [ ] Replace `YOUR_USERNAME` with actual GitHub username
-  - [ ] Verify repository URL correct
-  - [ ] Verify publish.owner and publish.repo correct
+- [x] 11.2 Create GitHub repository
+  - [x] Repository created: https://github.com/chrolicious/hoolgg_roster
+  - [x] Made repository public (required for auto-updates)
+  - [x] Releases feature enabled
+- [x] 11.3 Update package.json repository URLs
+  - [x] Replaced `YOUR_USERNAME` with `chrolicious`
+  - [x] Updated repository URL to `hoolgg_roster`
+  - [x] Updated publish.owner and publish.repo
 - [ ] 11.4 Final testing checklist
   - [ ] Clean VM install test
   - [ ] Update flow test (v1.0.0 → v1.0.1-test)
@@ -217,15 +217,15 @@
   - [ ] All Flask features work (sync, drag-drop, tasks, etc.)
 
 ## 12. Production Release
-- [ ] 12.1 Commit all changes
-  - [ ] Git add electron/, .github/workflows/, docs
-  - [ ] Commit message: "Add Electron desktop app with auto-updates"
-- [ ] 12.2 Push to GitHub
-  - [ ] Push to main branch
-  - [ ] Verify GitHub Actions workflow file visible
-- [ ] 12.3 Create release tag
-  - [ ] Create tag: `git tag v1.0.0`
-  - [ ] Push tag: `git push origin v1.0.0`
+- [x] 12.1 Commit all changes
+  - [x] Committed entire project including electron/, .github/workflows/
+  - [x] Commit: "Release v0.1.0-rev2: UI Polish & Typography Improvements"
+- [x] 12.2 Push to GitHub
+  - [x] Pushed to main branch
+  - [x] GitHub Actions workflow file visible
+- [x] 12.3 Create release tag
+  - [x] Created tag: `v0.1.0-rev2`
+  - [x] Pushed tag to GitHub
 - [ ] 12.4 Monitor automated build
   - [ ] Watch GitHub Actions workflow execute
   - [ ] Verify build succeeds (~10-15 minutes)
