@@ -1668,3 +1668,62 @@ function restartTourHandler() {
         startTour();
     }, 400);
 }
+
+// Auto-updater UI (Electron only)
+if (window.electron) {
+    const updateSection = document.getElementById('updateSection');
+    const currentVersionEl = document.getElementById('currentVersion');
+    const updateStatusEl = document.getElementById('updateStatus');
+    const checkUpdatesBtn = document.getElementById('checkUpdatesBtn');
+    const installUpdateBtn = document.getElementById('installUpdateBtn');
+
+    // Show update section in packaged app
+    if (updateSection) updateSection.style.display = 'block';
+
+    // Get app version from package.json via Electron
+    fetch('/api/data').then(() => {
+        // Just use a placeholder for now, will be replaced by actual version
+        currentVersionEl.textContent = 'v0.1.1';
+    });
+
+    // Listen for update status
+    window.electron.onUpdateStatus((data) => {
+        console.log('Update status:', data);
+
+        if (data.status === 'checking') {
+            updateStatusEl.textContent = 'Checking for updates...';
+            updateStatusEl.style.color = 'var(--text-secondary)';
+            installUpdateBtn.style.display = 'none';
+        } else if (data.status === 'available') {
+            updateStatusEl.textContent = `Update available: ${data.version}`;
+            updateStatusEl.style.color = 'var(--hool-light-blue)';
+            checkUpdatesBtn.textContent = 'Download Update';
+            installUpdateBtn.style.display = 'none';
+        } else if (data.status === 'downloaded') {
+            updateStatusEl.textContent = `Update ${data.version} ready to install`;
+            updateStatusEl.style.color = 'var(--hool-primary-blue)';
+            installUpdateBtn.style.display = 'inline-block';
+        } else if (data.status === 'up-to-date') {
+            updateStatusEl.textContent = 'App is up to date';
+            updateStatusEl.style.color = 'var(--text-muted)';
+            installUpdateBtn.style.display = 'none';
+        } else if (data.status === 'dev-mode') {
+            updateStatusEl.textContent = 'Development mode (updates disabled)';
+            updateStatusEl.style.color = 'var(--text-muted)';
+            checkUpdatesBtn.disabled = true;
+        }
+    });
+
+    // Check for updates button
+    checkUpdatesBtn?.addEventListener('click', () => {
+        window.electron.checkForUpdates();
+        checkUpdatesBtn.disabled = true;
+        setTimeout(() => checkUpdatesBtn.disabled = false, 3000);
+    });
+
+    // Install update button
+    installUpdateBtn?.addEventListener('click', () => {
+        window.electron.installUpdate();
+    });
+}
+

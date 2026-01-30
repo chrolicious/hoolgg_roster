@@ -151,10 +151,24 @@ function createTray() {
 // Auto-updater event handlers
 autoUpdater.on('checking-for-update', () => {
     console.log('Checking for updates...');
+    if (mainWindow) {
+        mainWindow.webContents.send('update-status', {
+            status: 'checking',
+            message: 'Checking for updates...'
+        });
+    }
 });
 
 autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
+
+    if (mainWindow) {
+        mainWindow.webContents.send('update-status', {
+            status: 'available',
+            version: info.version,
+            message: `Update available: v${info.version}`
+        });
+    }
 
     const { dialog } = require('electron');
     dialog.showMessageBox(mainWindow, {
@@ -172,6 +186,12 @@ autoUpdater.on('update-available', (info) => {
 
 autoUpdater.on('update-not-available', () => {
     console.log('App is up to date');
+    if (mainWindow) {
+        mainWindow.webContents.send('update-status', {
+            status: 'up-to-date',
+            message: 'App is up to date'
+        });
+    }
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
@@ -180,6 +200,14 @@ autoUpdater.on('download-progress', (progressObj) => {
 
 autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded');
+
+    if (mainWindow) {
+        mainWindow.webContents.send('update-status', {
+            status: 'downloaded',
+            version: info.version,
+            message: `Update v${info.version} ready to install`
+        });
+    }
 
     const { dialog } = require('electron');
     dialog.showMessageBox(mainWindow, {
@@ -260,4 +288,22 @@ ipcMain.on('window-close', () => {
     if (mainWindow) {
         mainWindow.close();
     }
+});
+
+// Auto-updater IPC handlers
+ipcMain.on('check-for-updates', () => {
+    if (app.isPackaged) {
+        autoUpdater.checkForUpdates();
+    } else {
+        if (mainWindow) {
+            mainWindow.webContents.send('update-status', {
+                status: 'dev-mode',
+                message: 'Update checking disabled in development mode'
+            });
+        }
+    }
+});
+
+ipcMain.on('install-update', () => {
+    autoUpdater.quitAndInstall();
 });

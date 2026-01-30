@@ -135,6 +135,22 @@
                 <div class="character-config-grid" id="characterConfigGrid"></div>
             </div>
 
+            <div class="settings-section" id="updateSection" style="display: none;">
+                <h3>App Updates</h3>
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+                    <div>
+                        <p style="margin: 0; font-size: var(--font-size-sm); color: var(--text-secondary);">
+                            Current Version: <strong id="currentVersion">Loading...</strong>
+                        </p>
+                        <p style="margin: 4px 0 0 0; font-size: var(--font-size-sm);" id="updateStatus">
+                            Checking for updates...
+                        </p>
+                    </div>
+                </div>
+                <button class="btn-secondary" id="checkUpdatesBtn">Check for Updates</button>
+                <button class="btn-primary" id="installUpdateBtn" style="margin-left: 12px; display: none;">Install Update</button>
+            </div>
+
             <div class="settings-section">
                 <h3>Utilities</h3>
                 <button class="btn-secondary" id="resetDailyBtn">Reset Daily Checklists</button>
