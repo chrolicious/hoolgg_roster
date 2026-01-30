@@ -5,10 +5,10 @@
   "main": "main.js",
   "author": "Hool.gg",
   "license": "MIT",
-  "homepage": "https://github.com/YOUR_USERNAME/midnight_tracker",
+  "homepage": "https://github.com/chrolicious/hoolgg_roster",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/midnight_tracker.git"
+    "url": "https://github.com/chrolicious/hoolgg_roster.git"
   },
   "scripts": {
     "start": "electron .",
@@ -70,8 +70,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "YOUR_USERNAME",
-      "repo": "midnight_tracker",
+      "owner": "chrolicious",
+      "repo": "hoolgg_roster",
       "releaseType": "release"
     }
   }
