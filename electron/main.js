@@ -12,7 +12,7 @@ const FLASK_PORT = 5000;
 const FLASK_URL = `http://127.0.0.1:${FLASK_PORT}`;
 
 // Auto-updater configuration
-autoUpdater.autoDownload = false;
+autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
 function createWindow() {
