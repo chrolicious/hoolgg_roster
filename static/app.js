@@ -1683,26 +1683,48 @@ if (window.electron) {
     // Display current app version
     currentVersionEl.textContent = 'v' + window.electron.appVersion;
 
+    let currentUpdateStatus = null;
+
     // Listen for update status
     window.electron.onUpdateStatus((data) => {
         console.log('Update status:', data);
+        currentUpdateStatus = data.status;
 
         if (data.status === 'checking') {
             updateStatusEl.textContent = 'Checking for updates...';
             updateStatusEl.style.color = 'var(--text-secondary)';
+            checkUpdatesBtn.textContent = 'Check for Updates';
+            checkUpdatesBtn.disabled = true;
             installUpdateBtn.style.display = 'none';
         } else if (data.status === 'available') {
-            updateStatusEl.textContent = `Update available: ${data.version}`;
+            updateStatusEl.textContent = `Update available: v${data.version}`;
             updateStatusEl.style.color = 'var(--hool-light-blue)';
             checkUpdatesBtn.textContent = 'Download Update';
+            checkUpdatesBtn.disabled = false;
+            installUpdateBtn.style.display = 'none';
+        } else if (data.status === 'downloading') {
+            updateStatusEl.textContent = `Downloading... ${Math.round(data.percent)}%`;
+            updateStatusEl.style.color = 'var(--text-secondary)';
+            checkUpdatesBtn.textContent = 'Downloading...';
+            checkUpdatesBtn.disabled = true;
             installUpdateBtn.style.display = 'none';
         } else if (data.status === 'downloaded') {
-            updateStatusEl.textContent = `Update ${data.version} ready to install`;
+            updateStatusEl.textContent = `Update v${data.version} ready to install`;
             updateStatusEl.style.color = 'var(--hool-primary-blue)';
+            checkUpdatesBtn.textContent = 'Check for Updates';
+            checkUpdatesBtn.disabled = true;
             installUpdateBtn.style.display = 'inline-block';
         } else if (data.status === 'up-to-date') {
             updateStatusEl.textContent = 'App is up to date';
             updateStatusEl.style.color = 'var(--text-muted)';
+            checkUpdatesBtn.textContent = 'Check for Updates';
+            checkUpdatesBtn.disabled = false;
+            installUpdateBtn.style.display = 'none';
+        } else if (data.status === 'error') {
+            updateStatusEl.textContent = data.message;
+            updateStatusEl.style.color = 'var(--text-secondary)';
+            checkUpdatesBtn.textContent = 'Check for Updates';
+            checkUpdatesBtn.disabled = false;
             installUpdateBtn.style.display = 'none';
         } else if (data.status === 'dev-mode') {
             updateStatusEl.textContent = 'Development mode (updates disabled)';
@@ -1711,11 +1733,13 @@ if (window.electron) {
         }
     });
 
-    // Check for updates button
+    // Check / Download button (action depends on current state)
     checkUpdatesBtn?.addEventListener('click', () => {
-        window.electron.checkForUpdates();
-        checkUpdatesBtn.disabled = true;
-        setTimeout(() => checkUpdatesBtn.disabled = false, 3000);
+        if (currentUpdateStatus === 'available') {
+            window.electron.downloadUpdate();
+        } else {
+            window.electron.checkForUpdates();
+        }
     });
 
     // Install update button

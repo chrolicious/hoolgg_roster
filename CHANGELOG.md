@@ -5,6 +5,15 @@ All notable changes to Hool.gg Roster will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-01-31
+
+### 🐛 Bug Fixes
+
+- **Update Download**: Fixed "Download Update" button triggering a check instead of downloading
+- **Update UI Flow**: Removed redundant native dialogs, all update actions now handled in-app
+- **Download Progress**: Added download percentage feedback in Settings
+- **Update Errors**: Errors now shown in the update UI instead of silently failing
+
 ## [0.1.3] - 2026-01-31
 
 ### 🐛 Bug Fixes

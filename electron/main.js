@@ -169,19 +169,6 @@ autoUpdater.on('update-available', (info) => {
             message: `Update available: v${info.version}`
         });
     }
-
-    const { dialog } = require('electron');
-    dialog.showMessageBox(mainWindow, {
-        type: 'info',
-        title: 'Update Available',
-        message: `A new version (${info.version}) is available!`,
-        buttons: ['Download', 'Later'],
-        defaultId: 0
-    }).then((result) => {
-        if (result.response === 0) {
-            autoUpdater.downloadUpdate();
-        }
-    });
 });
 
 autoUpdater.on('update-not-available', () => {
@@ -196,6 +183,12 @@ autoUpdater.on('update-not-available', () => {
 
 autoUpdater.on('download-progress', (progressObj) => {
     console.log(`Download progress: ${progressObj.percent.toFixed(2)}%`);
+    if (mainWindow) {
+        mainWindow.webContents.send('update-status', {
+            status: 'downloading',
+            percent: progressObj.percent
+        });
+    }
 });
 
 autoUpdater.on('update-downloaded', (info) => {
@@ -208,23 +201,16 @@ autoUpdater.on('update-downloaded', (info) => {
             message: `Update v${info.version} ready to install`
         });
     }
-
-    const { dialog } = require('electron');
-    dialog.showMessageBox(mainWindow, {
-        type: 'info',
-        title: 'Update Ready',
-        message: 'Update downloaded. Restart the app to install.',
-        buttons: ['Restart Now', 'Later'],
-        defaultId: 0
-    }).then((result) => {
-        if (result.response === 0) {
-            autoUpdater.quitAndInstall();
-        }
-    });
 });
 
 autoUpdater.on('error', (error) => {
     console.error('Auto-updater error:', error);
+    if (mainWindow) {
+        mainWindow.webContents.send('update-status', {
+            status: 'error',
+            message: 'Update failed: ' + error.message
+        });
+    }
 });
 
 // App lifecycle
@@ -306,6 +292,10 @@ ipcMain.on('check-for-updates', () => {
             });
         }
     }
+});
+
+ipcMain.on('download-update', () => {
+    autoUpdater.downloadUpdate();
 });
 
 ipcMain.on('install-update', () => {
