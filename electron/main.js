@@ -38,7 +38,7 @@ function saveSettings(settings) {
 const settings = loadSettings();
 autoUpdater.autoDownload = settings.autoDownload !== false; // default true
 autoUpdater.autoInstallOnAppQuit = true;
-autoUpdater.validateUpdate = false; // no code signing certificate
+autoUpdater._verifyUpdateCodeSignature = () => Promise.resolve(null); // no code signing certificate
 
 function createWindow() {
     mainWindow = new BrowserWindow({
