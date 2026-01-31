@@ -1,6 +1,6 @@
 {
   "name": "hoolgg-roster",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "WoW Character Tracker for Midnight Expansion",
   "main": "main.js",
   "author": "Hool.gg",
@@ -42,7 +42,8 @@
         }
       ],
       "publisherName": "Hool.gg",
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.ico",
+      "artifactName": "Hool.gg-Roster-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,

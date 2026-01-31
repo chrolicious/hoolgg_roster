@@ -5,6 +5,13 @@ All notable changes to Hool.gg Roster will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2026-01-31
+
+### 🐛 Bug Fixes
+
+- **User data survives updates**: Moved data.json to AppData\Local\hoolgg-roster (userData), which updates never touch
+- **Single installer artifact**: Fixed duplicate .exe files in releases by setting explicit artifactName
+
 ## [0.1.7] - 2026-01-31
 
 ### 🐛 Bug Fixes

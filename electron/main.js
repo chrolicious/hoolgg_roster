@@ -103,7 +103,7 @@ function startFlask() {
     console.log('Starting Flask with:', pythonPath, appPath);
 
     flaskProcess = spawn(pythonPath, [appPath], {
-        env: { ...process.env, FLASK_ENV: 'production' }
+        env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') }
     });
 
     flaskProcess.stdout.on('data', (data) => {
