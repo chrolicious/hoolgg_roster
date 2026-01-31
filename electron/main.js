@@ -290,6 +290,10 @@ ipcMain.on('window-close', () => {
     }
 });
 
+ipcMain.on('get-app-version', (event) => {
+    event.returnValue = app.getVersion();
+});
+
 // Auto-updater IPC handlers
 ipcMain.on('check-for-updates', () => {
     if (app.isPackaged) {

@@ -130,30 +130,32 @@
   - [ ] Verify shortcuts removed
 
 ## 8. GitHub Actions CI/CD
-- [ ] 8.1 Create `.github/workflows/build-release.yml`
-  - [ ] Configure trigger on `tags: v*.*.*`
-  - [ ] Set runner to `windows-latest`
-- [ ] 8.2 Add workflow steps
-  - [ ] Checkout code
-  - [ ] Setup Node.js 20
-  - [ ] Setup Python 3.11
-  - [ ] Install Python dependencies (requirements.txt)
-  - [ ] Download Python embedded distribution
-  - [ ] Install pip in embedded Python
-  - [ ] Install Flask in embedded Python
-  - [ ] Install Electron dependencies (npm install)
-  - [ ] Build app (npm run build:publish)
-  - [ ] Upload build artifacts
-  - [ ] Create GitHub Release
-  - [ ] Upload installer to release
-- [ ] 8.3 Configure GitHub secrets
-  - [ ] Verify GH_TOKEN available (auto-provided)
-- [ ] 8.4 Test workflow with pre-release tag
-  - [ ] Push tag `v0.1.0-alpha`
-  - [ ] Monitor GitHub Actions logs
-  - [ ] Verify release created
-  - [ ] Download installer from release
-  - [ ] Test installation
+- [x] 8.1 Create `.github/workflows/build-release.yml`
+  - [x] Configure trigger on `tags: v*.*.*`
+  - [x] Set runner to `windows-latest`
+  - [x] Add permissions: contents: write (required for release creation)
+- [x] 8.2 Add workflow steps
+  - [x] Checkout code
+  - [x] Setup Node.js 20
+  - [x] Setup Python 3.11
+  - [x] Install Python dependencies (requirements.txt)
+  - [x] Download Python embedded distribution
+  - [x] Configure python311._pth to uncomment 'import site'
+  - [x] Install pip in embedded Python
+  - [x] Install Flask in embedded Python
+  - [x] Install Electron dependencies (npm install)
+  - [x] Build app (npm run build:publish)
+  - [x] Upload build artifacts
+  - [x] Create GitHub Release
+  - [x] Upload installer to release
+- [x] 8.3 Configure GitHub secrets
+  - [x] Verify GITHUB_TOKEN available (auto-provided)
+- [x] 8.4 Test workflow with production releases
+  - [x] v0.1.1: Validated Python bundling fix
+  - [x] v0.1.2: Validated permissions fix and complete pipeline
+  - [x] Monitor GitHub Actions logs
+  - [x] Verify release created
+  - [x] Verify installer uploaded (6 assets)
 
 ## 9. Auto-Update Testing
 - [ ] 9.1 Test update detection
@@ -226,11 +228,11 @@
 - [x] 12.3 Create release tag
   - [x] Created tag: `v0.1.0-rev2`
   - [x] Pushed tag to GitHub
-- [ ] 12.4 Monitor automated build
-  - [ ] Watch GitHub Actions workflow execute
-  - [ ] Verify build succeeds (~10-15 minutes)
-  - [ ] Verify GitHub Release created
-  - [ ] Verify installer uploaded to release
+- [x] 12.4 Monitor automated build
+  - [x] Watch GitHub Actions workflow execute
+  - [x] Verify build succeeds (~10-15 minutes) - SUCCESS!
+  - [x] Verify GitHub Release created - v0.1.2 published
+  - [x] Verify installer uploaded to release - 6 assets uploaded
 - [ ] 12.5 Test production release
   - [ ] Download installer from GitHub Release
   - [ ] Install on clean system

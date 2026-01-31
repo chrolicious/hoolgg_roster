@@ -1680,11 +1680,8 @@ if (window.electron) {
     // Show update section in packaged app
     if (updateSection) updateSection.style.display = 'block';
 
-    // Get app version from package.json via Electron
-    fetch('/api/data').then(() => {
-        // Just use a placeholder for now, will be replaced by actual version
-        currentVersionEl.textContent = 'v0.1.1';
-    });
+    // Display current app version
+    currentVersionEl.textContent = 'v' + window.electron.appVersion;
 
     // Listen for update status
     window.electron.onUpdateStatus((data) => {

@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('electron', {
     // System info
     platform: process.platform,
     version: process.versions.electron,
-    appVersion: require('electron').remote?.app?.getVersion() || 'dev',
+    appVersion: ipcRenderer.sendSync('get-app-version'),
 
     // Window controls
     minimizeWindow: () => ipcRenderer.send('window-minimize'),

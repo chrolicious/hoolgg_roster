@@ -5,6 +5,13 @@ All notable changes to Hool.gg Roster will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-01-31
+
+### 🐛 Bug Fixes
+
+- **Version Display**: Fixed app version showing hardcoded 0.1.1 instead of actual version
+- **IPC Version Check**: Replaced broken `remote` API with proper IPC handler for version retrieval
+
 ## [0.1.2] - 2026-01-30
 
 ### ✨ Features
