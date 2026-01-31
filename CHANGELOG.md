@@ -5,6 +5,13 @@ All notable changes to Hool.gg Roster will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-01-31
+
+### ✨ Features
+
+- **Auto-download toggle**: Settings > App Updates now has an "Automatically download updates" checkbox
+- Preference persists across restarts via settings.json in app data
+
 ## [0.1.5] - 2026-01-31
 
 ### 🐛 Bug Fixes

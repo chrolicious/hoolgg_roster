@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
+const fs = require('fs');
 const { spawn } = require('child_process');
 const axios = require('axios');
 
@@ -11,8 +12,31 @@ let tray;
 const FLASK_PORT = 5000;
 const FLASK_URL = `http://127.0.0.1:${FLASK_PORT}`;
 
+// Settings persistence
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+
+function loadSettings() {
+    try {
+        if (fs.existsSync(settingsPath)) {
+            return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        }
+    } catch (e) {
+        console.error('Error loading settings:', e);
+    }
+    return {};
+}
+
+function saveSettings(settings) {
+    try {
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+    } catch (e) {
+        console.error('Error saving settings:', e);
+    }
+}
+
 // Auto-updater configuration
-autoUpdater.autoDownload = true;
+const settings = loadSettings();
+autoUpdater.autoDownload = settings.autoDownload !== false; // default true
 autoUpdater.autoInstallOnAppQuit = true;
 
 function createWindow() {
@@ -300,4 +324,15 @@ ipcMain.on('download-update', () => {
 
 ipcMain.on('install-update', () => {
     autoUpdater.quitAndInstall();
+});
+
+ipcMain.on('get-auto-download', (event) => {
+    event.returnValue = autoUpdater.autoDownload;
+});
+
+ipcMain.on('set-auto-download', (event, enabled) => {
+    autoUpdater.autoDownload = enabled;
+    const current = loadSettings();
+    current.autoDownload = enabled;
+    saveSettings(current);
 });

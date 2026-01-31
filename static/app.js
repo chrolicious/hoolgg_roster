@@ -1676,12 +1676,21 @@ if (window.electron) {
     const updateStatusEl = document.getElementById('updateStatus');
     const checkUpdatesBtn = document.getElementById('checkUpdatesBtn');
     const installUpdateBtn = document.getElementById('installUpdateBtn');
+    const autoDownloadToggle = document.getElementById('autoDownloadToggle');
 
     // Show update section in packaged app
     if (updateSection) updateSection.style.display = 'block';
 
     // Display current app version
     currentVersionEl.textContent = 'v' + window.electron.appVersion;
+
+    // Initialize auto-download toggle from saved preference
+    if (autoDownloadToggle) {
+        autoDownloadToggle.checked = window.electron.getAutoDownload();
+        autoDownloadToggle.addEventListener('change', () => {
+            window.electron.setAutoDownload(autoDownloadToggle.checked);
+        });
+    }
 
     // Listen for update status
     window.electron.onUpdateStatus((data) => {

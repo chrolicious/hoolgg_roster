@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('electron', {
     checkForUpdates: () => ipcRenderer.send('check-for-updates'),
     downloadUpdate: () => ipcRenderer.send('download-update'),
     installUpdate: () => ipcRenderer.send('install-update'),
+    getAutoDownload: () => ipcRenderer.sendSync('get-auto-download'),
+    setAutoDownload: (enabled) => ipcRenderer.send('set-auto-download', enabled),
     onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, data) => callback(data)),
     removeUpdateListener: () => ipcRenderer.removeAllListeners('update-status')
 });
