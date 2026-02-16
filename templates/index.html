@@ -39,19 +39,9 @@
                 </div>
             </div>
             <div class="header-center">
-                <!-- Week Selector Dropdown -->
-                <div class="week-selector-dropdown">
-                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <select id="weekSelect" class="week-select"></select>
-                </div>
                 <!-- Tab Navigation -->
                 <nav class="tabs">
                     <button class="tab active" data-tab="dashboard">Dashboard</button>
-                    <button class="tab" data-tab="timeline">Timeline</button>
-                    <button class="tab" data-tab="crest-ledger">Crest Ledger</button>
-                    <button class="tab" data-tab="profession-hub">Profession Hub</button>
                     <button class="tab" data-tab="settings">Settings</button>
                 </nav>
             </div>
@@ -64,43 +54,20 @@
             <div class="dashboard-grid" id="dashboardGrid"></div>
         </div>
 
-        <!-- Timeline View -->
-        <div id="timeline" class="view">
-            <h2>Timeline</h2>
-            <div class="timeline" id="timelineContent"></div>
-        </div>
-
-        <!-- Crest Ledger View -->
-        <div id="crest-ledger" class="view">
-            <h2>Crest Ledger</h2>
-            <p class="text-muted">Weekly cap: 90 per type | Enter your weekly collection, totals accumulate automatically</p>
-            <div class="crest-table-container">
-                <table class="crest-table" id="crestTable"></table>
-            </div>
-        </div>
-
-        <!-- Profession Hub View -->
-        <div id="profession-hub" class="view">
-            <h2>Profession Hub</h2>
-            <div class="profession-table-container">
-                <table class="profession-table" id="professionTable"></table>
-            </div>
-        </div>
-
         <!-- Settings View -->
         <div id="settings" class="view">
             <h2>Settings</h2>
             <div class="settings-section">
                 <h3>Blizzard API Configuration</h3>
                 <div class="info-box">
-                    <p class="info-box-title">Why do I need API credentials?</p>
+                    <p class="info-box-title">Gear sync works out of the box</p>
                     <p class="info-box-text text-muted">
-                        API credentials allow the app to <strong>automatically sync your character's current gear, stats, and item levels</strong> directly from the Blizzard Armory.
-                        Without them, you'll need to manually update your gear after every change.
+                        The app includes a shared API key that lets it <strong>pull your character data from the Blizzard Armory automatically</strong> — no setup needed.
                     </p>
                     <p class="info-box-text text-muted" style="margin: 0;">
-                        Get your free API credentials at <a href="https://develop.battle.net/" target="_blank" style="color: var(--hool-primary-blue); text-decoration: underline;">develop.battle.net</a>
-                        (takes ~2 minutes). Your credentials stay on your device and are never sent anywhere else.
+                        If you run into rate-limit issues (rare, only with many characters syncing frequently), you can enter your own free credentials below from
+                        <a href="https://develop.battle.net/" target="_blank" style="color: var(--hool-primary-blue); text-decoration: underline;">develop.battle.net</a>.
+                        Your personal key stays on your device and is never sent anywhere else.
                     </p>
                 </div>
                 <div class="form-group">
@@ -121,18 +88,6 @@
                     </select>
                 </div>
                 <button class="btn-primary" id="saveApiConfig">Save API Configuration</button>
-            </div>
-
-            <div class="settings-section">
-                <h3>Character Configuration</h3>
-                <div class="info-box">
-                    <p class="info-box-title">Add Your Characters</p>
-                    <p class="info-box-text text-muted" style="margin: 0;">
-                        Add the characters you want to track by entering their <strong>realm</strong> and <strong>character name</strong>.
-                        You can track up to 6 characters. Once added and API credentials are configured, click "Sync All Gear" on the Dashboard to automatically import their current gear and stats.
-                    </p>
-                </div>
-                <div class="character-config-grid" id="characterConfigGrid"></div>
             </div>
 
             <div class="settings-section" id="updateSection" style="display: none;">

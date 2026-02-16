@@ -2,6 +2,8 @@
 
 let appData = null;
 let saveTimeout = null;
+let dashboardState = { currentView: 'overview', selectedCharId: null };
+let draggedCard = null;
 
 // WoW Class Colors
 const CLASS_COLORS = {
@@ -188,15 +190,6 @@ function switchTab(tabName) {
 
 // Setup global event listeners
 function setupEventListeners() {
-    // Week selector
-    const weekSelect = document.getElementById('weekSelect');
-    if (weekSelect) {
-        weekSelect.addEventListener('change', async (e) => {
-            const newWeek = parseInt(e.target.value);
-            await saveData('/api/meta', { current_week: newWeek });
-            await loadData();
-        });
-    }
 
     // Sync all button (handled in renderDashboard since it's dynamic)
 
@@ -224,226 +217,722 @@ function setupEventListeners() {
 
 // Render all views
 function renderAll() {
-    renderWeekSelector();
     renderDashboard();
-    renderTimeline();
-    renderCrestLedger();
-    renderProfessionHub();
     renderSettings();
 }
 
-// Week Selector
-function renderWeekSelector() {
-    const select = document.getElementById('weekSelect');
-    if (!select) return;
+// Week names for timeline
+const WEEK_NAMES = [
+    'Pre-Season', 'Heroic Week', 'Mythic+ Opens', 'Final Raid Opens',
+    'Steady Progression', 'Week 5', 'Week 6', 'Week 7',
+    'Week 8', 'Week 9 Optimization', 'Week 10', 'Week 11 Refinement', 'Week 12 Completion'
+];
 
-    select.innerHTML = '';
+// Vault ilvl lookup tables (by week number)
+const RAID_DIFF_ILVL = {
+    lfr:    [215,220,222,225,227,230,232,235,238,240,245,250,255],
+    normal: [220,230,232,235,238,240,242,245,248,250,255,260,265],
+    heroic: [225,240,243,245,248,250,253,255,258,260,265,270,275],
+    mythic: [230,250,253,255,258,260,263,265,268,270,275,278,280]
+};
+const MPLUS_KEY_ILVL = [220,222,224,226,228,230,232,234,236,238,240,242,244,246,248,250,252,254,256,258,260];
 
-    for (let i = 0; i <= 12; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = i === 0 ? 'Pre-Season' : `Week ${i}`;
-        if (i === appData.meta.current_week) {
-            option.selected = true;
+function calculateVaultSlots(weeklyProgress, currentWeek) {
+    const wp = weeklyProgress || {};
+    const weekStr = String(currentWeek);
+    const data = wp[weekStr] || { raid_bosses: {lfr:0,normal:0,heroic:0,mythic:0}, m_plus_dungeons: [], highest_delve: 0, world_vault: [null,null,null] };
+
+    // Raid: flatten kills by difficulty (highest first)
+    const raidKills = [];
+    for (const diff of ['mythic','heroic','normal','lfr']) {
+        const count = data.raid_bosses[diff] || 0;
+        const ilvl = RAID_DIFF_ILVL[diff] ? (RAID_DIFF_ILVL[diff][Math.min(currentWeek, 12)] || 230) : 230;
+        for (let i = 0; i < count; i++) raidKills.push({ label: diff.charAt(0).toUpperCase() + diff.slice(1), ilvl });
+    }
+    const raidSlots = [
+        raidKills.length >= 1 ? raidKills[0] : null,
+        raidKills.length >= 4 ? raidKills[3] : null,
+        raidKills.length >= 7 ? raidKills[6] : null
+    ];
+
+    // Dungeon: sort M+ by key level desc
+    const mplus = (data.m_plus_dungeons || []).slice().sort((a, b) => (b.key_level || 0) - (a.key_level || 0));
+    const dunSlots = [
+        mplus.length >= 1 ? { label: `+${mplus[0].key_level}`, ilvl: MPLUS_KEY_ILVL[Math.min(mplus[0].key_level || 0, MPLUS_KEY_ILVL.length - 1)] } : null,
+        mplus.length >= 4 ? { label: `+${mplus[3].key_level}`, ilvl: MPLUS_KEY_ILVL[Math.min(mplus[3].key_level || 0, MPLUS_KEY_ILVL.length - 1)] } : null,
+        mplus.length >= 7 ? { label: `+${mplus[6].key_level}`, ilvl: MPLUS_KEY_ILVL[Math.min(mplus[6].key_level || 0, MPLUS_KEY_ILVL.length - 1)] } : null
+    ];
+
+    // World vault: pass through manual entries
+    const worldSlots = (data.world_vault || [null, null, null]).map(v => v ? { label: 'World', ilvl: v } : null);
+
+    return { raid: raidSlots, dungeon: dunSlots, world: worldSlots };
+}
+
+function renderVaultGrid(vault) {
+    const tracks = [
+        { key: 'raid', label: 'Raid' },
+        { key: 'dungeon', label: 'Dungeon' },
+        { key: 'world', label: 'World' }
+    ];
+    return tracks.map(track => {
+        const slots = vault[track.key] || [null, null, null];
+        return `<div class="vault-row">
+            <div class="vault-track-label">${track.label}</div>
+            ${slots.map(slot => slot
+                ? `<div class="vault-slot vault-slot-filled" title="${slot.label} (${slot.ilvl} ilvl)">${slot.ilvl}</div>`
+                : `<div class="vault-slot vault-slot-empty">—</div>`
+            ).join('')}
+        </div>`;
+    }).join('');
+}
+
+function navigateToDetail(charId) {
+    dashboardState.currentView = 'detail';
+    dashboardState.selectedCharId = charId;
+    renderDashboard();
+}
+
+function navigateToOverview() {
+    dashboardState.currentView = 'overview';
+    dashboardState.selectedCharId = null;
+    renderDashboard();
+}
+
+// Dashboard — routes between overview and detail
+function renderDashboard() {
+    const container = document.getElementById('dashboard');
+    if (!container) return;
+
+    if (dashboardState.currentView === 'detail' && dashboardState.selectedCharId != null) {
+        const char = appData.characters.find(c => c.id === dashboardState.selectedCharId);
+        if (char) {
+            renderDetailView(container, char);
+        } else {
+            navigateToOverview();
         }
-        select.appendChild(option);
+    } else {
+        renderOverviewGrid(container);
     }
 }
 
-// Dashboard
-function renderDashboard() {
-    const container = document.getElementById('dashboard');
-    const dashboardGrid = container.querySelector('.dashboard-grid');
-
-    // Render weekly maintenance section
-    const weeklySection = renderWeeklyMaintenance();
-    const existingWeekly = container.querySelector('.weekly-maintenance-section');
-    if (existingWeekly) {
-        existingWeekly.replaceWith(weeklySection);
-    } else {
-        container.insertBefore(weeklySection, dashboardGrid);
-    }
-
-    // Add sync button if it doesn't exist
-    let syncContainer = container.querySelector('.sync-all-container');
-    if (!syncContainer) {
-        syncContainer = document.createElement('div');
-        syncContainer.className = 'sync-all-container';
-        syncContainer.innerHTML = '<button class="sync-all-btn" id="syncAllBtn">Sync All Gear from Blizzard API</button>';
-        container.insertBefore(syncContainer, dashboardGrid);
-        // Reattach event listener
-        document.getElementById('syncAllBtn').addEventListener('click', syncAllCharacters);
-    }
-
-    // Render character cards or empty state
+function renderOverviewGrid(container) {
+    container.innerHTML = `
+        <div class="dashboard-breadcrumb">
+            <span class="breadcrumb-item active">Dashboard</span>
+        </div>
+        <div class="dashboard-grid" id="dashboardGrid"></div>
+    `;
     const grid = document.getElementById('dashboardGrid');
-    grid.innerHTML = '';
 
     if (appData.characters.length === 0) {
-        // Show empty state
         const emptyState = document.createElement('div');
         emptyState.className = 'empty-state';
         emptyState.innerHTML = `
-            <div class="empty-state-icon">
-                <img src="/static/cool-doge.gif" alt="Cool Doge" />
-            </div>
+            <div class="empty-state-icon"><img src="/static/cool-doge.gif" alt="Cool Doge" /></div>
             <h3>No Characters Added Yet</h3>
-            <p>Get started by adding your WoW characters to track their progression!</p>
-            <button class="btn-primary" onclick="document.querySelector('.tab[data-tab=\\'settings\\']').click()">
-                Go to Settings
-            </button>
+            <p>Get started by adding your WoW characters!</p>
+            <button class="btn-primary" onclick="addCharacter()">Add Character</button>
         `;
         grid.appendChild(emptyState);
-    } else {
-        // Show character cards
-        appData.characters.forEach(char => {
-            const card = createCharacterCard(char);
-            grid.appendChild(card);
-        });
-    }
-}
-
-function renderWeeklyMaintenance() {
-    const section = document.createElement('div');
-    section.className = 'weekly-maintenance-section';
-
-    if (!appData.weekly_tasks) {
-        section.innerHTML = '<p class="text-muted">No tasks configured</p>';
-        return section;
+        return;
     }
 
-    const weeklyTasks = appData.weekly_tasks.weekly || [];
-    const weekName = appData.weekly_tasks.name || 'Week ' + appData.meta.current_week;
+    appData.characters.forEach(char => {
+        grid.appendChild(createCompactCard(char));
+    });
 
-    section.innerHTML = `
-        <div class="settings-section" style="margin-bottom: 24px; position: relative;">
-            <div class="target-display" style="position: absolute; top: 12px; right: 12px;">
-                Target ilvl: <strong id="targetIlvl">${appData.weekly_target}</strong>
-            </div>
-            <h3>📋 Weekly Maintenance - ${weekName}</h3>
-            <p class="text-muted" style="margin-bottom: 16px;">Complete these tasks across all characters this week</p>
-            <div class="weekly-task-grid">
-                ${weeklyTasks.map(task => `
-                    <div class="weekly-task-item">
-                        <strong>${task.label}</strong>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
+    // Add Character card (always last, not draggable)
+    const addCard = document.createElement('div');
+    addCard.className = 'add-character-card';
+    addCard.innerHTML = `
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        <span>Add Character</span>
     `;
+    addCard.addEventListener('click', () => addCharacter());
+    grid.appendChild(addCard);
 
-    return section;
+    // Setup drag-and-drop on character cards only
+    grid.querySelectorAll('.character-card-compact').forEach(card => setupDragAndDrop(card));
 }
 
-function createCharacterCard(char) {
+function createCompactCard(char) {
     const card = document.createElement('div');
-    card.className = 'character-card-enhanced';
+    card.className = 'character-card-compact';
     card.draggable = true;
     card.dataset.charId = char.id;
 
     const delta = char.avg_ilvl - appData.weekly_target;
     const deltaClass = delta >= 0 ? 'positive' : 'negative';
     const deltaSign = delta >= 0 ? '+' : '';
-
-    const lastSync = char.last_gear_sync
-        ? `Last sync: ${formatTimestamp(char.last_gear_sync)}`
-        : 'Not synced';
-
-    const avatarUrl = char.avatar_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%232a2a2a"/%3E%3C/svg%3E';
+    const avatarUrl = char.avatar_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="48" height="48"%3E%3Crect fill="%232a2a2a"/%3E%3C/svg%3E';
     const classColor = getClassColor(char.class);
 
+    // Task counts
+    const currentWeek = String(appData.meta.current_week);
+    const weeklyTasks = appData.weekly_tasks?.weekly || [];
+    const weeklyCompleted = weeklyTasks.filter(t => {
+        const charWeekly = char.weekly_tasks[currentWeek] || {};
+        return charWeekly[t.id];
+    }).length;
+
+    const dailyTasks = appData.weekly_tasks?.daily || [];
+    const dailyCompleted = dailyTasks.filter(t => {
+        return char.daily_tasks[t.id];
+    }).length;
+
+    // Vault
+    const vault = calculateVaultSlots(char.weekly_progress, appData.meta.current_week);
+
+    // Crest summary
+    const crestTypes = ['weathered', 'carved', 'runed', 'gilded'];
+    const crestHtml = crestTypes.map(type => {
+        const crest = char.crests[type] || { collected_this_week: 0 };
+        const isCapped = crest.collected_this_week >= 90;
+        return `<span class="compact-crest ${isCapped ? 'capped' : ''}">${crest.collected_this_week}<span class="compact-crest-max">/90</span></span>`;
+    }).join('');
+
+    // Profession summary
+    const profSummary = char.professions.filter(p => p).map(p => {
+        const prog = char.profession_progress?.[p] || {};
+        const done = prog.weekly_quest && prog.patron_orders && prog.treatise;
+        return `<span class="compact-prof">${p} ${done ? '✓' : '○'}</span>`;
+    }).join(' | ');
+
     card.innerHTML = `
-        <div class="char-header">
-            <div class="char-avatar-container">
-                <img src="${avatarUrl}" alt="${char.character_name || char.name}" class="char-avatar">
-            </div>
-            <div class="char-info">
-                <h3 style="color: ${classColor}">${char.character_name || char.name}</h3>
-                <div class="ilvl-display">
-                    ${char.avg_ilvl}
-                    <span class="ilvl-delta ${deltaClass}">${deltaSign}${delta.toFixed(1)}</span>
-                </div>
-                <div class="last-sync">${lastSync}</div>
+        <div class="compact-header">
+            <img src="${avatarUrl}" alt="${char.character_name || char.name}" class="compact-avatar">
+            <div class="compact-info">
+                <div class="compact-name" style="color: ${classColor}">${char.character_name || char.name}</div>
+                <div class="compact-ilvl">${char.avg_ilvl} <span class="ilvl-delta ${deltaClass}">${deltaSign}${delta.toFixed(1)}</span></div>
             </div>
             <button class="sync-btn-compact" data-char-id="${char.id}" title="Sync from Blizzard API">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
                 </svg>
             </button>
         </div>
+        <div class="compact-task-summary">Weekly: ${weeklyCompleted}/${weeklyTasks.length} · Daily: ${dailyCompleted}/${dailyTasks.length}</div>
+        <div class="vault-grid">${renderVaultGrid(vault)}</div>
+        <div class="compact-crest-summary">${crestHtml}</div>
+        ${profSummary ? `<div class="compact-profession-summary">${profSummary}</div>` : ''}
+    `;
 
-        <div class="char-stats">
-            ${renderCharacterStats(char)}
+    // Click to navigate to detail (but not if clicking sync button)
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('.sync-btn-compact')) {
+            navigateToDetail(char.id);
+        }
+    });
+
+    // Sync button
+    card.querySelector('.sync-btn-compact').addEventListener('click', (e) => {
+        e.stopPropagation();
+        syncCharacter(char.id, e.currentTarget);
+    });
+
+    return card;
+}
+
+// Character Detail View
+function renderDetailView(container, char) {
+    const currentWeek = appData.meta.current_week;
+    const delta = char.avg_ilvl - appData.weekly_target;
+    const deltaClass = delta >= 0 ? 'positive' : 'negative';
+    const deltaSign = delta >= 0 ? '+' : '';
+    const avatarUrl = char.avatar_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%232a2a2a"/%3E%3C/svg%3E';
+    const classColor = getClassColor(char.class);
+
+    container.innerHTML = `
+        <div class="dashboard-breadcrumb">
+            <span class="breadcrumb-item" onclick="navigateToOverview()" style="cursor:pointer;">Dashboard</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active">${char.character_name || char.name}</span>
         </div>
-
-        <div class="char-gear-section">
-            <div class="collapsible-header" data-target="gear-${char.id}">
-                <h4>
-                    <svg class="collapse-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                    Equipment
-                </h4>
-            </div>
-            <div class="collapsible-content collapsed" id="gear-${char.id}">
-                ${renderGearGrid(char.gear)}
-            </div>
-        </div>
-
-        <div class="tasks-container">
-            <div class="weekly-tasks-section">
-                <h4 style="margin-bottom: 8px;">Weekly Tasks</h4>
-                ${renderWeeklyTasksForCharacter(char)}
+        <div class="detail-view">
+            <!-- Header -->
+            <div class="detail-header">
+                <img src="${avatarUrl}" alt="${char.character_name || char.name}" class="detail-avatar">
+                <div class="detail-header-info">
+                    <h2 style="color: ${classColor}; margin:0;">${char.character_name || char.name}</h2>
+                    <div class="detail-ilvl">${char.avg_ilvl} ilvl <span class="ilvl-delta ${deltaClass}">${deltaSign}${delta.toFixed(1)}</span></div>
+                    <div class="detail-last-sync">${char.last_gear_sync ? 'Last sync: ' + formatTimestamp(char.last_gear_sync) : 'Not synced'}</div>
+                </div>
+                <div class="detail-header-actions">
+                    <button class="sync-btn-detail" id="detailSyncBtn" data-char-id="${char.id}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                        Sync
+                    </button>
+                    <button class="detail-delete-btn" onclick="deleteCharacter(${char.id})">Delete</button>
+                </div>
             </div>
 
-            <div class="daily-checklist">
-                <h4>Daily Tasks</h4>
-                ${renderDailyChecklist(char)}
-            </div>
-        </div>
+            <!-- Timeline -->
+            <div class="detail-section" id="detailTimeline"></div>
 
-        <div class="crest-summary">
-            <h4 style="margin-bottom: 8px;">Weekly Crests</h4>
-            ${renderCrestSummary(char)}
+            <!-- Great Vault -->
+            <div class="detail-section">
+                <h3>Great Vault</h3>
+                <div class="vault-grid" id="detailVault"></div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="detail-section">
+                <h3>Equipment</h3>
+                <div id="detailGear"></div>
+            </div>
+
+            <!-- BiS Tracker -->
+            <div class="detail-section" id="detailBis"></div>
+
+            <!-- Tasks -->
+            <div class="detail-section" id="detailTasks"></div>
+
+            <!-- Crests -->
+            <div class="detail-section" id="detailCrests"></div>
+
+            <!-- Professions -->
+            <div class="detail-section" id="detailProfessions"></div>
+
+            <!-- Talent Builds -->
+            <div class="detail-section" id="detailTalents"></div>
+
+            <!-- Weekly Progress -->
+            <div class="detail-section" id="detailWeeklyProgress"></div>
         </div>
     `;
 
-    // Sync button
-    card.querySelector('.sync-btn-compact').addEventListener('click', () => syncCharacter(char.id));
+    // Wire sync button
+    document.getElementById('detailSyncBtn').addEventListener('click', (e) => {
+        syncCharacter(char.id, e.currentTarget);
+    });
 
-    // Collapsible gear section only
-    const gearHeader = card.querySelector('.collapsible-header[data-target^="gear-"]');
-    if (gearHeader) {
-        gearHeader.addEventListener('click', (e) => {
-            const targetId = e.currentTarget.dataset.target;
-            const content = card.querySelector(`#${targetId}`);
-            const icon = e.currentTarget.querySelector('.collapse-icon');
+    // Render sub-sections
+    renderDetailTimeline(char, currentWeek);
+    renderDetailVault(char, currentWeek);
+    renderDetailGear(char);
+    renderBisTracker(char);
+    renderDetailTasks(char);
+    renderDetailCrests(char);
+    renderDetailProfessions(char);
+    renderTalentBuilds(char);
+    renderWeeklyProgress(char, currentWeek);
 
-            content.classList.toggle('collapsed');
-            icon.classList.toggle('rotated');
+    // Load icons for gear
+    setTimeout(() => loadItemIcons(), 100);
+}
 
-            // Save collapse state to localStorage
-            saveCollapseState(targetId, !content.classList.contains('collapsed'));
-        });
-
-        // Restore collapse state from localStorage
-        const targetId = gearHeader.dataset.target;
-        const isExpanded = getCollapseState(targetId);
-        if (isExpanded) {
-            const content = card.querySelector(`#${targetId}`);
-            const icon = gearHeader.querySelector('.collapse-icon');
-            content.classList.remove('collapsed');
-            icon.classList.add('rotated');
-        }
+function renderDetailTimeline(char, currentWeek) {
+    const container = document.getElementById('detailTimeline');
+    let nodesHtml = '';
+    for (let i = 0; i <= 12; i++) {
+        let cls = '';
+        if (i === currentWeek) cls = 'current';
+        else if (i < currentWeek) cls = 'past';
+        else cls = 'future';
+        nodesHtml += `<div class="timeline-node ${cls}" data-week="${i}" title="${WEEK_NAMES[i]}">${i}</div>`;
     }
 
-    // Daily and weekly checklist events
-    setupChecklistEvents(card, char.id);
+    const weekTasks = appData.weekly_tasks || {};
+    const weekName = weekTasks.name || WEEK_NAMES[currentWeek] || ('Week ' + currentWeek);
+    const target = appData.weekly_target || 0;
+    const delta = char.avg_ilvl - target;
+    const deltaClass = delta >= 0 ? 'positive' : 'negative';
+    const deltaSign = delta >= 0 ? '+' : '';
+    const milestones = weekTasks.weekly || [];
 
-    // Drag and drop events
-    setupDragAndDrop(card);
+    container.innerHTML = `
+        <h3>Season Timeline</h3>
+        <div class="timeline-bar">${nodesHtml}</div>
+        <div class="timeline-detail-panel">
+            <div class="timeline-week-header">
+                <strong>${weekName}</strong>
+                <span class="timeline-week-position">Week ${currentWeek} of 12</span>
+            </div>
+            <div class="timeline-targets">
+                Target: <strong>${target} ilvl</strong> · Your avg: <strong>${char.avg_ilvl} ilvl</strong>
+                <span class="ilvl-delta ${deltaClass}">${deltaSign}${delta.toFixed(1)}</span>
+            </div>
+            ${milestones.length ? `<ul class="timeline-milestones">${milestones.map(m => `<li>${m.label}</li>`).join('')}</ul>` : ''}
+        </div>
+    `;
 
-    return card;
+    // Wire timeline node clicks
+    container.querySelectorAll('.timeline-node').forEach(node => {
+        node.addEventListener('click', async () => {
+            const newWeek = parseInt(node.dataset.week);
+            await saveData('/api/meta', { current_week: newWeek });
+            await loadData();
+        });
+    });
+}
+
+function renderDetailVault(char, currentWeek) {
+    const vault = calculateVaultSlots(char.weekly_progress, currentWeek);
+    document.getElementById('detailVault').innerHTML = renderVaultGrid(vault);
+}
+
+function renderDetailGear(char) {
+    document.getElementById('detailGear').innerHTML = renderGearGrid(char.gear);
+}
+
+function renderBisTracker(char) {
+    const container = document.getElementById('detailBis');
+    const bisList = char.bis_list || [];
+
+    let listHtml = bisList.map(item => `
+        <div class="bis-item" data-bis-id="${item.id}">
+            <label class="bis-checkbox-label">
+                <input type="checkbox" class="bis-obtained" ${item.obtained ? 'checked' : ''}>
+            </label>
+            <span class="bis-slot-badge">${capitalize(item.slot)}</span>
+            <span class="bis-item-name">${item.item_name}</span>
+            ${item.target_ilvl ? `<span class="bis-target-ilvl">${item.target_ilvl}</span>` : ''}
+            ${item.synced ? `<span class="bis-synced">synced</span>` : ''}
+            <button class="bis-delete-btn" data-bis-id="${item.id}">✕</button>
+        </div>
+    `).join('');
+
+    const slots = ['head','neck','shoulder','back','chest','wrist','hands','waist','legs','feet','ring1','ring2','trinket1','trinket2','main_hand','off_hand'];
+
+    container.innerHTML = `
+        <h3>BiS Tracker</h3>
+        <div class="bis-list">${listHtml || '<p class="text-muted" style="font-size:var(--font-size-sm);">No BiS items added yet.</p>'}</div>
+        <div class="bis-add-form">
+            <h4 style="margin:8px 0 4px; font-size:var(--font-size-sm);">Add BiS Item</h4>
+            <select id="bisSlot">${slots.map(s => `<option value="${s}">${capitalize(s.replace('_',' '))}</option>`).join('')}</select>
+            <input type="text" id="bisItemName" placeholder="Item name">
+            <input type="text" id="bisItemId" placeholder="Item ID (optional)">
+            <input type="text" id="bisTargetIlvl" placeholder="Target ilvl">
+            <button class="btn-primary bis-add-btn">Add</button>
+        </div>
+    `;
+
+    // Wire BiS events
+    container.querySelectorAll('.bis-obtained').forEach(cb => {
+        cb.addEventListener('change', async (e) => {
+            const bisItem = e.target.closest('.bis-item');
+            const bisId = parseInt(bisItem.dataset.bisId);
+            await saveData(`/api/character/${char.id}/bis/${bisId}`, { obtained: e.target.checked }, 'PUT');
+            await loadData();
+        });
+    });
+
+    container.querySelectorAll('.bis-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const bisId = parseInt(e.currentTarget.dataset.bisId);
+            try {
+                await fetch(`/api/character/${char.id}/bis/${bisId}`, { method: 'DELETE' });
+                await loadData();
+            } catch(err) { showSaveIndicator('Delete failed', 'error'); }
+        });
+    });
+
+    container.querySelector('.bis-add-btn').addEventListener('click', async () => {
+        const slot = document.getElementById('bisSlot').value;
+        const name = document.getElementById('bisItemName').value.trim();
+        const itemId = document.getElementById('bisItemId').value.trim();
+        const targetIlvl = document.getElementById('bisTargetIlvl').value.trim();
+
+        if (!name) { showSaveIndicator('Item name required', 'error'); return; }
+
+        try {
+            const response = await fetch(`/api/character/${char.id}/bis`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slot, item_name: name, item_id: itemId || null, target_ilvl: targetIlvl || null })
+            });
+            const result = await response.json();
+            if (result.success) { showSaveIndicator('BiS item added', 'saved'); await loadData(); }
+            else { showSaveIndicator(result.error || 'Failed', 'error'); }
+        } catch(err) { showSaveIndicator('Failed to add BiS item', 'error'); }
+    });
+}
+
+function renderTalentBuilds(char) {
+    const container = document.getElementById('detailTalents');
+    const builds = char.talent_builds || [];
+    const categoryColors = { raid: '#ef4444', dungeon: '#3b82f6', delve: '#22c55e', pvp: '#a855f7' };
+
+    let listHtml = builds.map(build => `
+        <div class="talent-card" data-talent-id="${build.id}">
+            <div class="talent-card-header">
+                <span class="talent-category-badge" style="background:${categoryColors[build.category] || '#666'}40; color:${categoryColors[build.category] || '#666'};">${capitalize(build.category)}</span>
+                <strong class="talent-name">${build.name}</strong>
+                <button class="talent-delete-btn" data-talent-id="${build.id}">✕</button>
+            </div>
+            ${build.description ? `<div class="talent-description">${build.description}</div>` : ''}
+            ${build.talent_string ? `<div class="talent-string-row">
+                <span class="talent-string-preview">${build.talent_string.substring(0, 60)}${build.talent_string.length > 60 ? '…' : ''}</span>
+                <button class="talent-copy-btn" data-talent-string="${escapeHtml(build.talent_string)}">Copy</button>
+            </div>` : ''}
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <h3>Talent Builds</h3>
+        <div class="talent-list">${listHtml || '<p class="text-muted" style="font-size:var(--font-size-sm);">No talent builds saved yet.</p>'}</div>
+        <details class="talent-add-form">
+            <summary style="cursor:pointer; font-size:var(--font-size-sm); color:var(--hool-primary-blue);">+ Add Talent Build</summary>
+            <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                <select id="talentCategory">
+                    <option value="raid">Raid</option>
+                    <option value="dungeon">Dungeon</option>
+                    <option value="delve">Delve</option>
+                    <option value="pvp">PvP</option>
+                </select>
+                <input type="text" id="talentName" placeholder="Build name">
+                <textarea id="talentDescription" placeholder="Description" rows="2" style="font-family:inherit; font-size:var(--font-size-sm); background:var(--bg-card); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; padding:6px 10px; resize:vertical;"></textarea>
+                <textarea id="talentString" placeholder="Paste talent string from game" rows="2" style="font-family:inherit; font-size:var(--font-size-sm); background:var(--bg-card); border:1px solid var(--border-color); color:var(--text-primary); border-radius:6px; padding:6px 10px; resize:vertical;"></textarea>
+                <button class="btn-primary talent-save-btn">Save Build</button>
+            </div>
+        </details>
+    `;
+
+    // Wire events
+    container.querySelectorAll('.talent-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const talentId = parseInt(btn.dataset.talentId);
+            try {
+                await fetch(`/api/character/${char.id}/talents/${talentId}`, { method: 'DELETE' });
+                await loadData();
+            } catch(err) { showSaveIndicator('Delete failed', 'error'); }
+        });
+    });
+
+    container.querySelectorAll('.talent-copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const str = btn.dataset.talentString;
+            navigator.clipboard.writeText(str).then(() => showSaveIndicator('Copied!', 'saved')).catch(() => {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = str;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showSaveIndicator('Copied!', 'saved');
+            });
+        });
+    });
+
+    container.querySelector('.talent-save-btn').addEventListener('click', async () => {
+        const category = document.getElementById('talentCategory').value;
+        const name = document.getElementById('talentName').value.trim();
+        const description = document.getElementById('talentDescription').value.trim();
+        const talentString = document.getElementById('talentString').value.trim();
+
+        if (!name) { showSaveIndicator('Build name required', 'error'); return; }
+
+        try {
+            const response = await fetch(`/api/character/${char.id}/talents`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category, name, description, talent_string: talentString })
+            });
+            const result = await response.json();
+            if (result.success) { showSaveIndicator('Talent build saved', 'saved'); await loadData(); }
+            else { showSaveIndicator(result.error || 'Failed', 'error'); }
+        } catch(err) { showSaveIndicator('Failed to save talent build', 'error'); }
+    });
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderDetailTasks(char) {
+    const container = document.getElementById('detailTasks');
+    container.innerHTML = `
+        <h3>Tasks</h3>
+        <div class="detail-tasks-weekly">
+            <h4 style="margin:0 0 8px;">Weekly Tasks</h4>
+            ${renderWeeklyTasksForCharacter(char)}
+        </div>
+        <div class="detail-tasks-daily" style="margin-top:16px;">
+            <h4 style="margin:0 0 8px;">Daily Tasks</h4>
+            ${renderDailyChecklist(char)}
+        </div>
+    `;
+    setupChecklistEvents(container, char.id);
+}
+
+function renderDetailCrests(char) {
+    const container = document.getElementById('detailCrests');
+    const crestTypes = ['weathered', 'carved', 'runed', 'gilded'];
+
+    let html = crestTypes.map(type => {
+        const crest = char.crests[type] || { collected_this_week: 0, total_collected: 0 };
+        const isCapped = crest.collected_this_week >= 90;
+        return `<div class="detail-crest-row">
+            <img src="${getCrestIcon(type)}" alt="${type}" class="detail-crest-icon" onerror="handleCrestIconError(this, '${type}')" style="width:24px;height:24px;">
+            <span class="detail-crest-name">${capitalize(type)}</span>
+            <input type="number" min="0" value="${crest.collected_this_week}" class="detail-crest-input" data-char-id="${char.id}" data-crest-type="${type}" style="width:60px;">
+            <span class="detail-crest-label">/90</span>
+            ${isCapped ? '<span class="cap-badge">CAP</span>' : ''}
+            <span class="detail-crest-total" style="margin-left:auto;">Total: ${crest.total_collected}</span>
+        </div>`;
+    }).join('');
+
+    container.innerHTML = `<h3>Crests</h3><div class="detail-crest-list">${html}</div>`;
+
+    container.querySelectorAll('.detail-crest-input').forEach(input => {
+        input.addEventListener('change', async (e) => {
+            const charId = parseInt(e.target.dataset.charId);
+            const crestType = e.target.dataset.crestType;
+            const value = parseInt(e.target.value) || 0;
+            await saveData(`/api/character/${charId}/crests`, { crest_type: crestType, collected_this_week: value });
+            await loadData();
+        });
+    });
+}
+
+function renderDetailProfessions(char) {
+    const container = document.getElementById('detailProfessions');
+    const allProfessions = ['Alchemy','Blacksmithing','Enchanting','Engineering','Herbalism','Inscription','Jewelcrafting','Leatherworking','Mining','Skinning','Tailoring'];
+
+    let html = '';
+    for (let i = 0; i < 2; i++) {
+        const profName = char.professions[i] || '';
+        const prog = profName ? (char.profession_progress?.[profName] || { weekly_quest: false, patron_orders: false, treatise: false, knowledge_points: 0, concentration: 1000 }) : null;
+
+        html += `<div class="detail-prof-row">
+            <select class="detail-prof-dropdown" data-char-id="${char.id}" data-prof-index="${i}">
+                <option value="">— Select Profession —</option>
+                ${allProfessions.map(p => `<option value="${p}" ${profName === p ? 'selected' : ''}>${p}</option>`).join('')}
+            </select>
+            ${prog ? `
+                <div class="detail-prof-checks">
+                    <label><input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="weekly_quest" ${prog.weekly_quest ? 'checked' : ''}> Quest</label>
+                    <label><input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="patron_orders" ${prog.patron_orders ? 'checked' : ''}> Orders</label>
+                    <label><input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="treatise" ${prog.treatise ? 'checked' : ''}> Treatise</label>
+                </div>
+                <input type="number" class="detail-prof-input" min="0" value="${prog.knowledge_points}" data-char-id="${char.id}" data-profession="${profName}" data-field="knowledge_points" placeholder="KP">
+                <input type="number" class="detail-prof-input" min="0" max="1000" value="${prog.concentration}" data-char-id="${char.id}" data-profession="${profName}" data-field="concentration" placeholder="Conc">
+            ` : ''}
+        </div>`;
+    }
+
+    container.innerHTML = `<h3>Professions</h3><div class="detail-prof-list">${html}</div>`;
+
+    // Wire profession dropdowns
+    container.querySelectorAll('.detail-prof-dropdown').forEach(select => {
+        select.addEventListener('change', async (e) => {
+            const charId = parseInt(e.target.dataset.charId);
+            const profIndex = parseInt(e.target.dataset.profIndex);
+            const char2 = appData.characters.find(c => c.id === charId);
+            if (!char2) return;
+            const newProfessions = [...char2.professions];
+            while (newProfessions.length < 2) newProfessions.push('');
+            newProfessions[profIndex] = e.target.value;
+            try {
+                const response = await fetch(`/api/characters/${charId}/professions`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ professions: newProfessions })
+                });
+                const result = await response.json();
+                if (result.success) { showSaveIndicator('Profession updated', 'saved'); await loadData(); }
+                else { showSaveIndicator('Failed to update profession', 'error'); }
+            } catch(err) { showSaveIndicator('Failed to update profession', 'error'); }
+        });
+    });
+
+    // Wire profession checkboxes and number inputs
+    container.querySelectorAll('input[type="checkbox"], .detail-prof-input').forEach(input => {
+        input.addEventListener('change', async (e) => {
+            const charId = parseInt(e.target.dataset.charId);
+            const profession = e.target.dataset.profession;
+            const field = e.target.dataset.field;
+            const value = e.target.type === 'checkbox' ? e.target.checked : (parseInt(e.target.value) || 0);
+            await saveData(`/api/character/${charId}/profession`, { profession, [field]: value });
+        });
+    });
+}
+
+function renderWeeklyProgress(char, currentWeek) {
+    const container = document.getElementById('detailWeeklyProgress');
+    const weekStr = String(currentWeek);
+    const wp = (char.weekly_progress || {})[weekStr] || { raid_bosses: {lfr:0,normal:0,heroic:0,mythic:0}, m_plus_dungeons: [], highest_delve: 0, world_vault: [null,null,null] };
+
+    let mplusHtml = '';
+    for (let i = 0; i < 8; i++) {
+        const dungeon = wp.m_plus_dungeons[i] || { name: '', key_level: 0 };
+        mplusHtml += `<div class="mplus-input-row">
+            <input type="text" class="mplus-name-input" data-index="${i}" value="${dungeon.name || ''}" placeholder="Dungeon name">
+            <input type="number" class="mplus-key-input" data-index="${i}" min="0" value="${dungeon.key_level || ''}" placeholder="+">
+        </div>`;
+    }
+
+    container.innerHTML = `
+        <h3>Weekly Progress</h3>
+        <div class="weekly-progress-section">
+            <h4 style="margin:0 0 6px; font-size:var(--font-size-sm);">Raid Bosses Killed</h4>
+            <div class="raid-input-grid">
+                <label style="font-size:var(--font-size-sm);">LFR</label>
+                <input type="number" id="wpRaidLfr" min="0" value="${wp.raid_bosses.lfr || 0}" class="wp-raid-input" data-diff="lfr">
+                <label style="font-size:var(--font-size-sm);">Normal</label>
+                <input type="number" id="wpRaidNormal" min="0" value="${wp.raid_bosses.normal || 0}" class="wp-raid-input" data-diff="normal">
+                <label style="font-size:var(--font-size-sm);">Heroic</label>
+                <input type="number" id="wpRaidHeroic" min="0" value="${wp.raid_bosses.heroic || 0}" class="wp-raid-input" data-diff="heroic">
+                <label style="font-size:var(--font-size-sm);">Mythic</label>
+                <input type="number" id="wpRaidMythic" min="0" value="${wp.raid_bosses.mythic || 0}" class="wp-raid-input" data-diff="mythic">
+            </div>
+
+            <h4 style="margin:12px 0 6px; font-size:var(--font-size-sm);">M+ Dungeons (up to 8)</h4>
+            <div class="mplus-input-list">${mplusHtml}</div>
+
+            <h4 style="margin:12px 0 6px; font-size:var(--font-size-sm);">Highest Delve</h4>
+            <input type="number" id="wpDelve" min="0" value="${wp.highest_delve || 0}" placeholder="Tier" style="width:80px;">
+
+            <h4 style="margin:12px 0 6px; font-size:var(--font-size-sm);">World Vault (manual ilvl)</h4>
+            <div class="world-vault-input-row">
+                <input type="number" id="wpWorld1" value="${wp.world_vault[0] || ''}" placeholder="ilvl" class="wp-world-input" data-index="0">
+                <input type="number" id="wpWorld2" value="${wp.world_vault[1] || ''}" placeholder="ilvl" class="wp-world-input" data-index="1">
+                <input type="number" id="wpWorld3" value="${wp.world_vault[2] || ''}" placeholder="ilvl" class="wp-world-input" data-index="2">
+            </div>
+            <button class="btn-primary wp-save-btn" style="margin-top:12px;" data-char-id="${char.id}">Save Progress</button>
+        </div>
+    `;
+
+    // Wire save button
+    container.querySelector('.wp-save-btn').addEventListener('click', async () => {
+        const raidBosses = {
+            lfr: parseInt(document.getElementById('wpRaidLfr').value) || 0,
+            normal: parseInt(document.getElementById('wpRaidNormal').value) || 0,
+            heroic: parseInt(document.getElementById('wpRaidHeroic').value) || 0,
+            mythic: parseInt(document.getElementById('wpRaidMythic').value) || 0
+        };
+
+        const mplusDungeons = [];
+        for (let i = 0; i < 8; i++) {
+            const name = document.querySelector(`.mplus-name-input[data-index="${i}"]`)?.value.trim() || '';
+            const keyLevel = parseInt(document.querySelector(`.mplus-key-input[data-index="${i}"]`)?.value) || 0;
+            if (name || keyLevel) mplusDungeons.push({ name, key_level: keyLevel });
+        }
+
+        const highestDelve = parseInt(document.getElementById('wpDelve').value) || 0;
+        const worldVault = [
+            document.getElementById('wpWorld1').value ? parseInt(document.getElementById('wpWorld1').value) : null,
+            document.getElementById('wpWorld2').value ? parseInt(document.getElementById('wpWorld2').value) : null,
+            document.getElementById('wpWorld3').value ? parseInt(document.getElementById('wpWorld3').value) : null
+        ];
+
+        try {
+            const response = await fetch(`/api/character/${char.id}/weekly-progress`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ raid_bosses: raidBosses, m_plus_dungeons: mplusDungeons, highest_delve: highestDelve, world_vault: worldVault })
+            });
+            const result = await response.json();
+            if (result.success) { showSaveIndicator('Progress saved', 'saved'); await loadData(); }
+            else { showSaveIndicator(result.error || 'Failed', 'error'); }
+        } catch(err) { showSaveIndicator('Failed to save progress', 'error'); }
+    });
 }
 
 // Collapse State Persistence
@@ -673,8 +1162,6 @@ function setupChecklistEvents(card, charId) {
 }
 
 // Drag and Drop
-let draggedCard = null;
-
 function setupDragAndDrop(card) {
     card.addEventListener('dragstart', (e) => {
         draggedCard = card;
@@ -686,7 +1173,7 @@ function setupDragAndDrop(card) {
         card.style.opacity = '1';
         draggedCard = null;
         // Remove all drag-over classes
-        document.querySelectorAll('.character-card-enhanced').forEach(c => {
+        document.querySelectorAll('.character-card-compact').forEach(c => {
             c.classList.remove('drag-over');
         });
     });
@@ -729,7 +1216,7 @@ function setupDragAndDrop(card) {
 
 async function saveCharacterOrder() {
     const grid = document.getElementById('dashboardGrid');
-    const cards = Array.from(grid.querySelectorAll('.character-card-enhanced'));
+    const cards = Array.from(grid.querySelectorAll('.character-card-compact'));
     const newOrder = cards.map(card => parseInt(card.dataset.charId));
 
     try {
@@ -750,511 +1237,12 @@ async function saveCharacterOrder() {
     }
 }
 
-// Timeline
-function renderTimeline() {
-    const container = document.getElementById('timelineContent');
-    container.innerHTML = '';
-
-    const weeks = [
-        {
-            number: 0,
-            name: 'Pre-Season Prep (Mar 2-16)',
-            milestones: [
-                'Level all your characters to max level (90)',
-                'Unlock Delves up to Tier 8 or Tier 11 on all characters',
-                'Farm random heroic dungeons for ilvl 224 gear',
-                'Complete world quests for initial upgrades',
-                'Fill vault slots (Champion track gear possible)',
-                'Darkmoon Faire opens Sunday for faster leveling',
-                'Prepare professions for crafting',
-                'Target: 215 ilvl baseline for Week 1'
-            ]
-        },
-        {
-            number: 1,
-            name: 'Heroic Week (Mar 17)',
-            milestones: [
-                'Complete LFR for tier pieces on all characters (unlock catalyst charges)',
-                'Mythic 0 tour (8 dungeons) on all characters',
-                'Kill world boss daily on all characters',
-                'Complete Prey quest on all characters',
-                'Farm high-level Delves with coffer keys',
-                'Clear Normal raid',
-                'Clear Heroic raid',
-                'DO NOT spend Heroic/Mythic crests yet',
-                'Target: 235 ilvl'
-            ]
-        },
-        {
-            number: 2,
-            name: 'Mythic+ Opens (Mar 24)',
-            milestones: [
-                'Mythic raiding begins',
-                'Mythic+ dungeons open',
-                'Farm M+10s minimum for gear on all characters',
-                'Continue LFR for tier pieces on all characters',
-                'Farm Delves for crests',
-                'Fill 3 vault slots (6x M+10) on all characters',
-                'DO NOT spend Heroic/Mythic crests yet',
-                'Target: 235 ilvl'
-            ]
-        },
-        {
-            number: 3,
-            name: 'Final Raid Opens (Mar 31)',
-            milestones: [
-                'March on Quel\'danas raid unlocks',
-                'Complete full raid reclear before mythic progression',
-                'Farm M+12s for vault slots and crests',
-                'Begin spending Heroic/Mythic crests safely',
-                'Target: 250 ilvl'
-            ]
-        },
-        {
-            number: 4,
-            name: 'Steady Progression (Apr 7)',
-            milestones: [
-                'Continue M+12 farming',
-                'Ongoing mythic raid progression',
-                'Use crafting sparks for BiS pieces',
-                'Upgrade gear with crests',
-                'Target: 250 ilvl'
-            ]
-        },
-        {
-            number: 5,
-            name: 'Week 5 Progression',
-            milestones: [
-                'Continue M+12 farming on all characters',
-                'Mythic raid progression',
-                'Fill vault slots weekly on all characters',
-                'Work toward 4-set Tier bonus on all characters',
-                'Target: 265 ilvl'
-            ]
-        },
-        {
-            number: 6,
-            name: 'Week 6 Progression',
-            milestones: [
-                '4-set Tier priority for all characters',
-                'Upgrade crafted gear pieces',
-                'Push M+12s for gear and crests on all characters',
-                'Mythic raid progression',
-                'Target: 265 ilvl'
-            ]
-        },
-        {
-            number: 7,
-            name: 'Week 7 Progression',
-            milestones: [
-                'Second Spark of Omen available',
-                'Complete 4-set Tier on all characters',
-                'Continue M+12 farming on all characters',
-                'Target: 265 ilvl'
-            ]
-        },
-        {
-            number: 8,
-            name: 'Week 8 Progression',
-            milestones: [
-                'Push for BiS trinkets and weapons',
-                'Optimize secondary stats',
-                'High mythic raid progression',
-                'Continue vault filling',
-                'Target: 265 ilvl'
-            ]
-        },
-        {
-            number: 9,
-            name: 'Week 9 Optimization',
-            milestones: [
-                'Mythic Track upgrades priority',
-                'Farm specific BiS items on all characters',
-                '4-set Tier completion on all characters',
-                'Perfect gear min-maxing',
-                'Target: 280 ilvl'
-            ]
-        },
-        {
-            number: 10,
-            name: 'Week 10 Optimization',
-            milestones: [
-                'BiS optimization across warband',
-                'Continue mythic raid progression',
-                'Maximize all crest usage',
-                'Fill all vault slots',
-                'Target: 280 ilvl'
-            ]
-        },
-        {
-            number: 11,
-            name: 'Week 11 Refinement',
-            milestones: [
-                'Final gear min-maxing on all characters',
-                'Perfect secondary stat allocation',
-                'Complete any missing BiS pieces',
-                'All characters pushing 280+ ilvl',
-                'Target: 280 ilvl'
-            ]
-        },
-        {
-            number: 12,
-            name: 'Week 12 Completion',
-            milestones: [
-                'All characters at or above target ilvl',
-                'Full 4-set Tier across entire warband',
-                'BiS trinkets and weapons secured on all characters',
-                'Ready for next content phase',
-                'Target: 280 ilvl'
-            ]
-        }
-    ];
-
-    weeks.forEach(week => {
-        const item = document.createElement('div');
-        item.className = 'week-item';
-        if (week.number === appData.meta.current_week) {
-            item.classList.add('current');
-        }
-
-        item.innerHTML = `
-            <h3>
-                <span class="week-number">Week ${week.number}</span>
-                ${week.name ? `<span style="color: var(--text-secondary); font-weight: var(--font-weight-normal); margin-left: 8px;">- ${week.name}</span>` : ''}
-            </h3>
-            <ul>
-                ${week.milestones.map(m => `<li>${m}</li>`).join('')}
-            </ul>
-        `;
-
-        container.appendChild(item);
-    });
-}
-
-// Crest Ledger
-function renderCrestLedger() {
-    const table = document.getElementById('crestTable');
-    const crestTypes = ['weathered', 'carved', 'runed', 'gilded'];
-
-    let html = `
-        <thead>
-            <tr>
-                <th>Character</th>
-                ${crestTypes.map(type => {
-                    const iconUrl = getCrestIcon(type);
-                    return `<th>
-                        <div class="crest-header">
-                            <img src="${iconUrl}" alt="${type}" class="crest-icon-header" onerror="handleCrestIconError(this, '${type}')" />
-                            ${capitalize(type)}
-                        </div>
-                    </th>`;
-                }).join('')}
-            </tr>
-        </thead>
-        <tbody>
-    `;
-
-    appData.characters.forEach(char => {
-        const classColor = getClassColor(char.class);
-        html += `<tr>`;
-        html += `<td><strong style="color: ${classColor}">${char.character_name || char.name}</strong></td>`;
-
-        crestTypes.forEach(type => {
-            const crest = char.crests[type];
-            const isCapped = crest.collected_this_week >= 90;
-            const badge = isCapped ? '<span class="cap-badge">CAP</span>' : '';
-
-            html += `
-                <td>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <input type="number"
-                               min="0"
-                               value="${crest.collected_this_week}"
-                               data-char-id="${char.id}"
-                               data-crest-type="${type}"
-                               placeholder="This week"
-                               style="flex: 1;">
-                        ${badge}
-                    </div>
-                    <div class="crest-total-display">
-                        Total: <strong>${crest.total_collected}</strong>
-                    </div>
-                    <div class="progress-indicator">
-                        ${crest.collected_this_week}/90 this week
-                    </div>
-                </td>
-            `;
-        });
-
-        html += `</tr>`;
-    });
-
-    html += `</tbody>`;
-    table.innerHTML = html;
-
-    // Setup crest input events
-    table.querySelectorAll('input[type="number"]').forEach(input => {
-        input.addEventListener('change', async (e) => {
-            const charId = parseInt(e.target.dataset.charId);
-            const crestType = e.target.dataset.crestType;
-            const value = parseInt(e.target.value) || 0;
-
-            const updates = {
-                crest_type: crestType,
-                collected_this_week: value
-            };
-
-            await saveData(`/api/character/${charId}/crests`, updates);
-            await loadData();
-        });
-    });
-}
-
-// Profession Hub
-function renderProfessionHub() {
-    const table = document.getElementById('professionTable');
-
-    const allProfessions = ['Alchemy', 'Blacksmithing', 'Enchanting', 'Engineering',
-                            'Herbalism', 'Inscription', 'Jewelcrafting', 'Leatherworking',
-                            'Mining', 'Skinning', 'Tailoring'];
-
-    let html = `
-        <thead>
-            <tr>
-                <th>Character</th>
-                <th>Profession</th>
-                <th>Weekly Tasks</th>
-                <th>Knowledge Points</th>
-                <th>Concentration</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
-
-    appData.characters.forEach((char, charIdx) => {
-        const classColor = getClassColor(char.class);
-
-        // Show 2 profession slots per character (even if empty)
-        for (let profIndex = 0; profIndex < 2; profIndex++) {
-            const profName = char.professions[profIndex] || '';
-            const prof = profName ? char.profession_progress[profName] : {
-                weekly_quest: false,
-                patron_orders: false,
-                treatise: false,
-                knowledge_points: 0,
-                concentration: 1000
-            };
-
-            html += `
-                <tr class="profession-row">
-                    ${profIndex === 0 ? `<td rowspan="2" class="char-name-cell"><strong style="color: ${classColor}">${char.character_name || char.name}</strong></td>` : ''}
-                    <td>
-                        <select class="profession-dropdown" data-char-id="${char.id}" data-prof-index="${profIndex}">
-                            <option value="">-- Select Profession --</option>
-                            ${allProfessions.map(p => `<option value="${p}" ${profName === p ? 'selected' : ''}>${p}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td>
-                        ${profName ? `
-                            <div class="toggle-group">
-                                <label class="toggle-label">
-                                    <input type="checkbox"
-                                           data-char-id="${char.id}"
-                                           data-profession="${profName}"
-                                           data-field="weekly_quest"
-                                           ${prof.weekly_quest ? 'checked' : ''}>
-                                    Quest
-                                </label>
-                                <label class="toggle-label">
-                                    <input type="checkbox"
-                                           data-char-id="${char.id}"
-                                           data-profession="${profName}"
-                                           data-field="patron_orders"
-                                           ${prof.patron_orders ? 'checked' : ''}>
-                                    Orders
-                                </label>
-                                <label class="toggle-label">
-                                    <input type="checkbox"
-                                           data-char-id="${char.id}"
-                                           data-profession="${profName}"
-                                           data-field="treatise"
-                                           ${prof.treatise ? 'checked' : ''}>
-                                    Treatise
-                                </label>
-                            </div>
-                        ` : '<span class="text-muted">Select a profession</span>'}
-                    </td>
-                    <td>
-                        ${profName ? `
-                            <input type="number"
-                                   class="number-input"
-                                   min="0"
-                                   value="${prof.knowledge_points}"
-                                   data-char-id="${char.id}"
-                                   data-profession="${profName}"
-                                   data-field="knowledge_points">
-                        ` : ''}
-                    </td>
-                    <td>
-                        ${profName ? `
-                            <input type="number"
-                                   class="number-input"
-                                   min="0"
-                                   max="1000"
-                                   value="${prof.concentration}"
-                                   data-char-id="${char.id}"
-                                   data-profession="${profName}"
-                                   data-field="concentration">
-                        ` : ''}
-                    </td>
-                </tr>
-            `;
-        }
-    });
-
-    html += `</tbody>`;
-    table.innerHTML = html;
-
-    // Setup profession dropdown events
-    table.querySelectorAll('.profession-dropdown').forEach(select => {
-        select.addEventListener('change', async (e) => {
-            const charId = parseInt(e.target.dataset.charId);
-            const profIndex = parseInt(e.target.dataset.profIndex);
-            const char = appData.characters.find(c => c.id === charId);
-
-            if (!char) return;
-
-            // Update professions array
-            const newProfessions = [...char.professions];
-            while (newProfessions.length < 2) newProfessions.push('');
-            newProfessions[profIndex] = e.target.value;
-
-            // Update via API
-            try {
-                const response = await fetch(`/api/characters/${charId}/professions`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ professions: newProfessions })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    showSaveIndicator('Profession updated', 'saved');
-                    await loadData();
-                } else {
-                    showSaveIndicator('Failed to update profession', 'error');
-                }
-            } catch (error) {
-                showSaveIndicator('Failed to update profession', 'error');
-            }
-        });
-    });
-
-    // Setup profession events
-    table.querySelectorAll('input[type="checkbox"], input[type="number"]').forEach(input => {
-        input.addEventListener('change', async (e) => {
-            const charId = parseInt(e.target.dataset.charId);
-            const profession = e.target.dataset.profession;
-            const field = e.target.dataset.field;
-
-            let value;
-            if (e.target.type === 'checkbox') {
-                value = e.target.checked;
-            } else {
-                value = parseInt(e.target.value) || 0;
-            }
-
-            const updates = {
-                profession: profession,
-                [field]: value
-            };
-
-            await saveData(`/api/character/${charId}/profession`, updates);
-        });
-    });
-}
-
 // Settings
 function renderSettings() {
     // Load API config
     document.getElementById('clientId').value = appData.blizzard_config.client_id || '';
     document.getElementById('clientSecret').value = appData.blizzard_config.client_secret || '';
     document.getElementById('region').value = appData.blizzard_config.region || 'us';
-
-    // Render character configs
-    const grid = document.getElementById('characterConfigGrid');
-    grid.innerHTML = '';
-
-    // Add "Add Character" button
-    const addBtn = document.createElement('div');
-    addBtn.className = 'character-config-card add-character-card';
-    addBtn.style.cursor = 'pointer';
-    addBtn.style.display = 'flex';
-    addBtn.style.flexDirection = 'column';
-    addBtn.style.alignItems = 'center';
-    addBtn.style.justifyContent = 'center';
-    addBtn.style.gap = '12px';
-    addBtn.innerHTML = `
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--hool-primary-blue);">
-            <circle cx="12" cy="12" r="10" stroke-width="2"/>
-            <line x1="12" y1="8" x2="12" y2="16" stroke-width="2"/>
-            <line x1="8" y1="12" x2="16" y2="12" stroke-width="2"/>
-        </svg>
-        <h4 style="margin: 0; color: var(--hool-primary-blue);">Add Character</h4>
-    `;
-    addBtn.addEventListener('click', (e) => {
-        console.log('Add character button clicked!');
-        e.preventDefault();
-        e.stopPropagation();
-        addCharacter();
-    });
-    console.log('Add character button created and attached to grid');
-    grid.appendChild(addBtn);
-
-    appData.characters.forEach(char => {
-        const card = document.createElement('div');
-        card.className = 'character-config-card';
-
-        card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h4 style="margin: 0;">${char.character_name || char.name}</h4>
-                <button class="btn-danger-sm" onclick="deleteCharacter(${char.id})" style="padding: 4px 10px; font-size: var(--font-size-sm); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #FCA5A5; border-radius: 6px; cursor: pointer;">Delete</button>
-            </div>
-            <div class="form-group">
-                <label>Character Name</label>
-                <input type="text"
-                       value="${char.character_name || char.name}"
-                       placeholder="e.g., Mytank"
-                       data-char-id="${char.id}"
-                       data-field="character_name">
-            </div>
-            <div class="form-group">
-                <label>Realm</label>
-                <input type="text"
-                       value="${char.realm}"
-                       placeholder="e.g., Area-52"
-                       data-char-id="${char.id}"
-                       data-field="realm">
-            </div>
-        `;
-
-        grid.appendChild(card);
-
-        // Setup character config events
-        card.querySelectorAll('input').forEach(input => {
-            input.addEventListener('change', async (e) => {
-                const charId = parseInt(e.target.dataset.charId);
-                const field = e.target.dataset.field;
-                const value = e.target.value;
-
-                const updates = {};
-                updates[field] = value;
-
-                await saveData(`/api/character/${charId}/config`, updates);
-                await loadData();
-            });
-        });
-    });
 }
 
 // Add Character
@@ -1368,6 +1356,7 @@ async function deleteCharacter(charId) {
         const result = await response.json();
         if (result.success) {
             showSaveIndicator('Character deleted', 'saved');
+            navigateToOverview();
             await loadData();
         } else {
             showSaveIndicator('Failed to delete character', 'error');
@@ -1390,10 +1379,11 @@ async function saveApiConfig() {
 }
 
 // Character Sync
-async function syncCharacter(charId) {
-    const btn = event.target;
-    btn.disabled = true;
-    btn.textContent = 'Syncing...';
+async function syncCharacter(charId, btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.querySelector('svg') ? btn.querySelector('svg').style.opacity = '0.5' : null;
+    }
 
     try {
         const response = await fetch(`/api/character/${charId}/sync`, { method: 'POST' });
@@ -1409,29 +1399,25 @@ async function syncCharacter(charId) {
         showSaveIndicator('Sync failed', 'error');
     }
 
-    btn.disabled = false;
-    btn.textContent = 'Sync';
+    if (btn) {
+        btn.disabled = false;
+        btn.querySelector('svg') ? btn.querySelector('svg').style.opacity = '1' : null;
+    }
 }
 
 async function syncAllCharacters() {
-    const btn = document.getElementById('syncAllBtn');
-    btn.disabled = true;
-    btn.textContent = 'Syncing all characters...';
-
     try {
         const response = await fetch('/api/sync-all', { method: 'POST' });
         const result = await response.json();
 
         const successCount = result.results.filter(r => r.success).length;
-        showSaveIndicator(`Synced ${successCount}/6 characters`, 'saved');
+        const total = result.results.length;
+        showSaveIndicator(`Synced ${successCount}/${total} characters`, 'saved');
 
         await loadData();
     } catch (error) {
         showSaveIndicator('Sync all failed', 'error');
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Sync All Gear from Blizzard API';
 }
 
 async function resetDaily() {
@@ -1557,82 +1543,28 @@ function startTour() {
                 }
             },
             {
-                element: '#weekSelect',
+                element: '.dashboard-grid',
                 popover: {
-                    title: 'Week Selector',
-                    description: 'Select the current week of the season. This determines which weekly tasks and target item levels to display. Start with "Pre-Season" if the season hasn\'t begun yet.',
-                    side: 'bottom',
+                    title: 'Character Dashboard 👤',
+                    description: 'This is your character overview. Each card shows at-a-glance stats: task progress, Great Vault slots, crests, and professions. Click any card to open its full detail view.',
+                    side: 'top',
+                    align: 'start'
+                }
+            },
+            {
+                element: '.add-character-card',
+                popover: {
+                    title: 'Add Characters Here 👆',
+                    description: 'Click this card to add a new WoW character. Gear sync works out of the box — no API setup needed to get started!',
+                    side: 'top',
                     align: 'center'
                 }
             },
             {
                 element: '.tab[data-tab="settings"]',
                 popover: {
-                    title: 'First: Configure API Settings ⚙️',
-                    description: 'Click here to go to Settings where you\'ll enter your Blizzard API credentials. This allows the app to automatically sync your character gear from the Armory.',
-                    side: 'bottom',
-                    align: 'center'
-                }
-            },
-            {
-                element: '.weekly-maintenance-section',
-                popover: {
-                    title: 'Weekly Maintenance Tasks 📋',
-                    description: 'These are the key tasks to complete each week across all your characters. The tasks update based on the selected week.',
-                    side: 'bottom',
-                    align: 'start'
-                }
-            },
-            {
-                element: '.target-display',
-                popover: {
-                    title: 'Target Item Level 🎯',
-                    description: 'This shows the target average item level for the current week. Your character cards will display how far above or below this target each character is.',
-                    side: 'left',
-                    align: 'start'
-                }
-            },
-            {
-                element: '.sync-all-btn',
-                popover: {
-                    title: 'Sync All Gear 🔄',
-                    description: 'After setting up your API credentials, click this button to automatically fetch current gear for all your characters from the Blizzard Armory.',
-                    side: 'top',
-                    align: 'center'
-                }
-            },
-            {
-                element: '.dashboard-grid',
-                popover: {
-                    title: 'Character Cards 👤',
-                    description: 'Each card shows a character\'s current gear, stats, and weekly/daily tasks. You can drag cards to reorder them. Click the sync button on individual cards to update just that character.',
-                    side: 'top',
-                    align: 'start'
-                }
-            },
-            {
-                element: '.tab[data-tab="timeline"]',
-                popover: {
-                    title: 'Timeline Tab 📅',
-                    description: 'View weekly milestones and goals for the entire season. This helps you plan ahead and track progression week by week.',
-                    side: 'bottom',
-                    align: 'center'
-                }
-            },
-            {
-                element: '.tab[data-tab="crest-ledger"]',
-                popover: {
-                    title: 'Crest Ledger 💎',
-                    description: 'Track your weekly crest earnings across all characters. Stay on top of your upgrade resources and plan your gear improvements.',
-                    side: 'bottom',
-                    align: 'center'
-                }
-            },
-            {
-                element: '.tab[data-tab="profession-hub"]',
-                popover: {
-                    title: 'Profession Hub 🔨',
-                    description: 'Manage your characters\' professions, track knowledge points, and plan your crafting progression.',
+                    title: 'Settings ⚙️',
+                    description: 'Gear sync works automatically with a shared API key. If you ever hit rate limits, you can add your own free credentials here from develop.battle.net.',
                     side: 'bottom',
                     align: 'center'
                 }
@@ -1641,7 +1573,7 @@ function startTour() {
                 element: 'body',
                 popover: {
                     title: 'You\'re All Set! 🚀',
-                    description: 'Now head to Settings to configure your Blizzard API credentials, then start tracking your characters! You can restart this tour anytime from the Settings page.',
+                    description: 'Add a character, then click it to explore the detail view — it includes an interactive season timeline, Great Vault tracker, BiS checklist, talent builds, and more. You can restart this tour anytime from Settings.',
                     side: 'center',
                     align: 'center'
                 }
@@ -1662,7 +1594,7 @@ function restartTourHandler() {
     if (dashboardTab) {
         dashboardTab.click();
     }
-    
+
     // Start tour after brief delay to let tab switch
     setTimeout(() => {
         startTour();
@@ -1743,4 +1675,3 @@ if (window.electron) {
         window.electron.installUpdate();
     });
 }
-

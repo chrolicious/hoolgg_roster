@@ -47,80 +47,139 @@ WEEKLY_TARGETS = {
     9: 280, 10: 280, 11: 280, 12: 280,
 }
 
+# Shared public API key — works out of the box for all users.
+# Rate-limited to Blizzard's standard tier. Users can override in Settings.
+DEFAULT_CLIENT_ID = 'YOUR_PUBLIC_CLIENT_ID'
+DEFAULT_CLIENT_SECRET = 'YOUR_PUBLIC_CLIENT_SECRET'
+
 # Week-specific tasks based on Midnight progression
 WEEKLY_TASKS = {
     0: {
-        'name': 'Pre-Season Prep (Mar 2-16)',
+        'name': 'Early Access + Pre-Season (Feb 26 - Mar 16)',
         'weekly': [
-            {'id': 'level_max', 'label': 'Level your characters to max level (90)', 'done': False},
-            {'id': 'unlock_delves', 'label': 'Unlock Delves up to Tier 8/11', 'done': False},
-            {'id': 'heroic_dungeons', 'label': 'Farm random heroic dungeons (ilvl 224 gear)', 'done': False},
-            {'id': 'world_quests', 'label': 'Complete world quests for initial gear upgrades', 'done': False},
-            {'id': 'vault_unlock', 'label': 'Fill vault slots (Champion track gear possible)', 'done': False},
+            {'id': 'level_chars', 'label': 'Level all characters to max (90)', 'done': False},
+            {'id': 'darkmoon', 'label': 'Use Darkmoon Faire for 10% XP/Renown bonus', 'done': False},
+            {'id': 'unlock_delves', 'label': 'Unlock Delves to Tier 8+ (Tier 11 if available)', 'done': False},
+            {'id': 'm0_tour', 'label': 'Complete M0 dungeon tour for gear (don\'t upgrade)', 'done': False},
+            {'id': 'craft_prep', 'label': 'Craft 246 ilvl gear in 3-5 slots (60x Veteran Crests each)', 'done': False},
+            {'id': 'world_quests', 'label': 'Complete world quests for gear', 'done': False},
         ],
         'daily': [
-            {'id': 'level_alts', 'label': 'Continue leveling', 'done': False},
-            {'id': 'delve_farming', 'label': 'Farm Delves for gear', 'done': False},
-            {'id': 'heroic_queue', 'label': 'Queue random heroic dungeons', 'done': False},
-            {'id': 'world_quests_daily', 'label': 'Complete world quests', 'done': False},
+            {'id': 'renown_dmf', 'label': 'Farm Renown (with DMF bonus)', 'done': False},
+            {'id': 'delve_farming', 'label': 'Farm Delves for gear and crests', 'done': False},
+            {'id': 'prey_quest', 'label': 'Complete Prey if rewards are useful', 'done': False},
         ]
     },
     1: {
-        'name': 'Heroic Week (Mar 17)',
+        'name': 'Season 1 Week 1 - Heroic Week (Mar 17)',
         'weekly': [
-            {'id': 'world_boss', 'label': 'Kill world boss', 'done': False},
-            {'id': 'lfr_tier', 'label': 'LFR for tier pieces (unlock catalyst charges)', 'done': False},
-            {'id': 'm0_tour', 'label': 'Complete Mythic 0 tour (8 dungeons)', 'done': False},
-            {'id': 'normal_raid', 'label': 'Clear Normal raid', 'done': False},
-            {'id': 'heroic_raid', 'label': 'Clear Heroic raid', 'done': False},
+            {'id': 'lfr_tier', 'label': 'Do LFR for tier pieces (unlock catalyst charges)', 'done': False},
+            {'id': 'm0_tour', 'label': 'Complete M0 tour (items drop at 1/6 Champion 246)', 'done': False},
+            {'id': 'world_boss', 'label': 'Kill world boss (2/6 Champion 250)', 'done': False},
+            {'id': 'crafting', 'label': 'Craft 246 ilvl pieces (3-5 slots) + fill remaining with 233', 'done': False},
+            {'id': 'delves_farm', 'label': 'Farm high-level Delves with coffer keys', 'done': False},
+            {'id': 'normal_clear', 'label': 'Clear Normal raid', 'done': False},
+            {'id': 'heroic_clear', 'label': 'Clear Heroic raid', 'done': False},
         ],
         'daily': [
-            {'id': 'prey_quest', 'label': 'Complete Prey quest', 'done': False},
-            {'id': 'delves', 'label': 'Farm high-level Delves (coffer keys)', 'done': False},
+            {'id': 'prey', 'label': 'Complete Prey if useful', 'done': False},
+            {'id': 'world_quests', 'label': 'Complete world quests', 'done': False},
         ]
     },
     2: {
-        'name': 'Mythic+ Opens',
+        'name': 'Season 1 Week 2 - Mythic Week + M+ Opens (Mar 24)',
         'weekly': [
-            {'id': 'world_boss', 'label': 'Kill world boss', 'done': False},
-            {'id': 'lfr_tier', 'label': 'LFR for tier pieces', 'done': False},
-            {'id': 'mythic_raid', 'label': 'Mythic raid progression', 'done': False},
-            {'id': 'vault_slots', 'label': 'Fill 3 vault slots (6x M+10)', 'done': False},
+            {'id': 'lfr_tier', 'label': 'Do LFR for tier pieces', 'done': False},
+            {'id': 'world_boss', 'label': 'Kill world boss (2/6 Champion)', 'done': False},
+            {'id': 'delves', 'label': 'Farm high-level Delves with coffer keys (optional)', 'done': False},
+            {'id': 'farm_mplus', 'label': 'Farm +10s (3/6h 266) for vault slots and crests', 'done': False},
+            {'id': 'normal_clear', 'label': 'Full clear Normal raid', 'done': False},
+            {'id': 'heroic_clear', 'label': 'Full clear Heroic raid', 'done': False},
+            {'id': 'mythic_prog', 'label': 'Begin mythic progression', 'done': False},
         ],
         'daily': [
-            {'id': 'm_plus', 'label': 'Farm M+10s for gear/crests', 'done': False},
-            {'id': 'delves_crests', 'label': 'Delves for crests (if needed)', 'done': False},
+            {'id': 'prey', 'label': 'Complete Prey if useful', 'done': False},
         ]
     },
     3: {
-        'name': 'Final Raid Opens',
+        'name': 'Season 1 Week 3 - Final Raid Opens (Mar 31)',
         'weekly': [
-            {'id': 'raid_reclear', 'label': 'Full raid reclear before mythic', 'done': False},
-            {'id': 'queldanas', 'label': 'March on Quel\'danas clear', 'done': False},
-            {'id': 'vault_slots', 'label': 'Fill 3 vault slots (6x M+12)', 'done': False},
+            {'id': 'vault_open', 'label': 'Open vault for 272+ myth item, upgrade AFTER crafting', 'done': False},
+            {'id': 'craft_weapon', 'label': 'Craft 2H mythic weapon at 5/6 285 (60 Myth Crests)', 'done': False},
+            {'id': 'lfr_tier', 'label': 'Do LFR for tier if no 4p yet', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
+            {'id': 'raid_reclear', 'label': 'Reclear all raids', 'done': False},
+            {'id': 'spend_heroic', 'label': 'Spend heroic crests (after reclear): upgrade 10 items to 4/6 for 300 total', 'done': False},
+            {'id': 'upgrade_myth', 'label': 'Upgrade 1/6 272 myth to 4/6 282 (60 crests)', 'done': False},
         ],
-        'daily': [
-            {'id': 'world_boss', 'label': 'Kill world boss', 'done': False},
-            {'id': 'm_plus_12', 'label': 'Farm M+12s for vault/crests', 'done': False},
-        ]
+        'daily': []
     },
-    # Weeks 4-12 use same structure as week 3
+    4: {
+        'name': 'Season 1 Week 4 - Progression (Apr 7)',
+        'weekly': [
+            {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
+            {'id': 'heroic_crests', 'label': 'Upgrade 2x 3/6→4/6 (60c) + 1x 4/6→5/6 (40c) = 100 heroic crests', 'done': False},
+            {'id': 'myth_upgrades', 'label': 'Upgrade your mythic pieces: 1/6→4/6 (60c) + 2/6→4/6 (50c) + 4/6→5/6 (50c)', 'done': False},
+        ],
+        'daily': []
+    },
+    5: {
+        'name': 'Season 1 Week 5 - Progression (Apr 14)',
+        'weekly': [
+            {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
+            {'id': 'craft_second', 'label': 'Craft second item at 5/6 285 mythic (60 crests)', 'done': False},
+            {'id': 'heroic_crests', 'label': 'Upgrade 2x 4/6→5/6 items with 80 heroic crests', 'done': False},
+            {'id': 'myth_upgrade', 'label': 'Upgrade 1/6 272→4/6 282 mythic (60 crests)', 'done': False},
+        ],
+        'daily': []
+    },
+    6: {
+        'name': 'Season 1 Week 6 - Progression (Apr 21)',
+        'weekly': [
+            {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
+            {'id': 'heroic_crests', 'label': 'Upgrade 3x 4/6→5/6 items with 120 heroic crests', 'done': False},
+            {'id': 'myth_upgrade', 'label': 'Upgrade 1/6→4/6 (30c) + 3/6→4/6 (30c) mythic = 60 crests', 'done': False},
+        ],
+        'daily': []
+    },
+    7: {
+        'name': 'Season 1 Week 7 - Progression (Apr 28)',
+        'weekly': [
+            {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
+            {'id': 'craft_third', 'label': 'Craft third item at 5/6 285 mythic (60 crests)', 'done': False},
+            {'id': 'heroic_crests', 'label': 'Upgrade 2x 4/6→5/6 items with 80 heroic crests', 'done': False},
+            {'id': 'myth_upgrade', 'label': 'Upgrade 1/6→3/6 279 mythic (30 crests)', 'done': False},
+        ],
+        'daily': []
+    },
+    8: {
+        'name': 'Season 1 Week 8 - Done with Heroic (May 5)',
+        'weekly': [
+            {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
+            {'id': 'heroic_final', 'label': 'Upgrade 2x 5/6→6/6 items with 100 heroic crests (DONE with heroic)', 'done': False},
+            {'id': 'myth_upgrades', 'label': 'Mythic: 1/6→2/6 (10c) + 3x 2/6→3/6 (60c) + 1x 3/6→4/6 (30c) = 100 crests', 'done': False},
+        ],
+        'daily': []
+    },
+    9: {
+        'name': 'Season 1 Week 9+ - Final Optimization (May 12+)',
+        'weekly': [
+            {'id': 'vault', 'label': 'Open vault and optimize picks', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s and optimally use crests', 'done': False},
+            {'id': 'craft_remaining', 'label': 'Craft remaining slots at 5/6 mythic (60c each)', 'done': False},
+            {'id': 'push_282', 'label': 'Get every item to at least 4/6 282 mythic', 'done': False},
+            {'id': 'upgrade_286', 'label': 'Start upgrading to 5/6 285 and 6/6 289', 'done': False},
+        ],
+        'daily': []
+    },
 }
 
-# Weeks 4-12 copy week 3 structure
-for week in range(4, 13):
-    WEEKLY_TASKS[week] = {
-        'name': f'Week {week} Progression',
-        'weekly': [
-            {'id': 'raid_progression', 'label': 'Mythic raid progression', 'done': False},
-            {'id': 'vault_slots', 'label': 'Fill 3 vault slots (6x M+12)', 'done': False},
-            {'id': 'crafting', 'label': 'Craft/upgrade gear pieces', 'done': False},
-        ],
-        'daily': [
-            {'id': 'world_boss', 'label': 'Kill world boss', 'done': False},
-            {'id': 'm_plus_12', 'label': 'Farm M+12s', 'done': False},
-        ]
-    }
+# Weeks 10-12 follow same progression pattern as week 9
 
 
 def get_weekly_tasks(week):
@@ -247,6 +306,14 @@ def load_data():
         if 'order' not in char:
             char['order'] = char['id']  # Default to ID order
 
+        # Ensure new fields for dashboard redesign
+        if 'weekly_progress' not in char:
+            char['weekly_progress'] = {}
+        if 'bis_list' not in char:
+            char['bis_list'] = []
+        if 'talent_builds' not in char:
+            char['talent_builds'] = []
+
     # Sort characters by order field
     data['characters'].sort(key=lambda c: c.get('order', c['id']))
 
@@ -301,8 +368,11 @@ def get_weekly_crest_cap(week):
 # Blizzard API Integration
 
 def get_blizzard_token(config):
-    """Get OAuth token from Blizzard API."""
-    if not config.get('client_id') or not config.get('client_secret'):
+    """Get OAuth token from Blizzard API. Falls back to shared default key."""
+    client_id = config.get('client_id') or DEFAULT_CLIENT_ID
+    client_secret = config.get('client_secret') or DEFAULT_CLIENT_SECRET
+
+    if not client_id or not client_secret:
         return None
 
     # Check if token is still valid
@@ -318,7 +388,7 @@ def get_blizzard_token(config):
         response = requests.post(
             token_url,
             data={'grant_type': 'client_credentials'},
-            auth=(config['client_id'], config['client_secret']),
+            auth=(client_id, client_secret),
             timeout=10
         )
         response.raise_for_status()
@@ -689,6 +759,17 @@ def update_meta():
                     # Reset daily tasks only
                     char['daily_tasks'] = {}
 
+                    # Initialize weekly_progress for new week if missing
+                    if 'weekly_progress' not in char:
+                        char['weekly_progress'] = {}
+                    if new_week_str not in char['weekly_progress']:
+                        char['weekly_progress'][new_week_str] = {
+                            'raid_bosses': {'lfr': 0, 'normal': 0, 'heroic': 0, 'mythic': 0},
+                            'm_plus_dungeons': [],
+                            'highest_delve': 0,
+                            'world_vault': [None, None, None]
+                        }
+
                     # Note: Weekly tasks persist and show completion history
 
     save_data(data)
@@ -881,6 +962,8 @@ def sync_character(char_id):
         api_data, error = fetch_character_equipment(config, char['realm'], char['character_name'])
 
         if error:
+            if '429' in str(error):
+                return jsonify({'error': 'Rate limit reached. Consider adding your own API key in Settings for higher limits.'}), 429
             return jsonify({'error': error}), 400
 
         # Parse and update gear (preserves Track values)
@@ -910,6 +993,17 @@ def sync_character(char_id):
 
         char['last_gear_sync'] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
+        # BiS auto-check: mark matching items as obtained
+        synced_item_ids = set()
+        for slot_data in char['gear'].values():
+            iid = slot_data.get('item_id')
+            if iid:
+                synced_item_ids.add(int(iid))
+        for bis_item in char.get('bis_list', []):
+            if bis_item.get('item_id') and int(bis_item['item_id']) in synced_item_ids:
+                bis_item['obtained'] = True
+                bis_item['synced'] = True
+
         # Save updated token if refreshed
         save_data(data)
 
@@ -932,7 +1026,10 @@ def sync_all_characters():
                 api_data, error = fetch_character_equipment(config, char['realm'], char['character_name'])
 
                 if error:
-                    results.append({'id': char['id'], 'name': char['name'], 'success': False, 'error': error})
+                    if '429' in str(error):
+                        results.append({'id': char['id'], 'name': char['name'], 'success': False, 'error': 'Rate limit reached. Consider adding your own API key in Settings for higher limits.'})
+                    else:
+                        results.append({'id': char['id'], 'name': char['name'], 'success': False, 'error': error})
                 else:
                     char['gear'], api_avg_ilvl = parse_equipment_response(api_data, char['gear'])
 
@@ -959,6 +1056,18 @@ def sync_all_characters():
                         char['stats'] = parse_character_stats(stats_data)
 
                     char['last_gear_sync'] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+
+                    # BiS auto-check: mark matching items as obtained
+                    synced_item_ids = set()
+                    for slot_data in char['gear'].values():
+                        iid = slot_data.get('item_id')
+                        if iid:
+                            synced_item_ids.add(int(iid))
+                    for bis_item in char.get('bis_list', []):
+                        if bis_item.get('item_id') and int(bis_item['item_id']) in synced_item_ids:
+                            bis_item['obtained'] = True
+                            bis_item['synced'] = True
+
                     results.append({'id': char['id'], 'name': char['name'], 'success': True})
             else:
                 results.append({'id': char['id'], 'name': char['name'], 'success': False, 'error': 'Not configured'})
@@ -1029,7 +1138,10 @@ def add_character():
         'stats': {},
         'class': '',
         'level': 0,
-        'order': new_id  # Default order matches ID
+        'order': new_id,  # Default order matches ID
+        'weekly_progress': {},
+        'bis_list': [],
+        'talent_builds': []
     }
 
     data['characters'].append(new_char)
@@ -1124,6 +1236,189 @@ def get_item_icon(item_id):
             return jsonify({'success': False, 'error': 'Icon not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/character/<int:char_id>/weekly-progress', methods=['POST'])
+def update_weekly_progress(char_id):
+    """Update weekly progress (raid, M+, delve, world vault)."""
+    data = load_data()
+    char = get_character(data, char_id)
+    if not char:
+        return jsonify({'error': 'Character not found'}), 404
+
+    current_week = str(data['meta'].get('current_week', 0))
+    if 'weekly_progress' not in char:
+        char['weekly_progress'] = {}
+    if current_week not in char['weekly_progress']:
+        char['weekly_progress'][current_week] = {
+            'raid_bosses': {'lfr': 0, 'normal': 0, 'heroic': 0, 'mythic': 0},
+            'm_plus_dungeons': [],
+            'highest_delve': 0,
+            'world_vault': [None, None, None]
+        }
+
+    updates = request.json
+    wp = char['weekly_progress'][current_week]
+
+    if 'raid_bosses' in updates:
+        for diff in ['lfr', 'normal', 'heroic', 'mythic']:
+            if diff in updates['raid_bosses']:
+                wp['raid_bosses'][diff] = max(0, int(updates['raid_bosses'][diff]))
+    if 'm_plus_dungeons' in updates:
+        wp['m_plus_dungeons'] = updates['m_plus_dungeons'][:8]
+    if 'highest_delve' in updates:
+        wp['highest_delve'] = max(0, int(updates['highest_delve']))
+    if 'world_vault' in updates:
+        wp['world_vault'] = updates['world_vault'][:3]
+
+    save_data(data)
+    return jsonify({'success': True, 'weekly_progress': char['weekly_progress']})
+
+
+@app.route('/api/character/<int:char_id>/bis', methods=['POST'])
+def add_bis_item(char_id):
+    """Add a BiS item to a character."""
+    data = load_data()
+    char = get_character(data, char_id)
+    if not char:
+        return jsonify({'error': 'Character not found'}), 404
+
+    if 'bis_list' not in char:
+        char['bis_list'] = []
+
+    req_data = request.json
+    slot = req_data.get('slot', '')
+    item_name = req_data.get('item_name', '')
+
+    if not slot or not item_name:
+        return jsonify({'error': 'Slot and item name are required'}), 400
+
+    max_id = max([item['id'] for item in char['bis_list']], default=0)
+    new_item = {
+        'id': max_id + 1,
+        'slot': slot,
+        'item_name': item_name,
+        'item_id': int(req_data['item_id']) if req_data.get('item_id') else None,
+        'target_ilvl': int(req_data['target_ilvl']) if req_data.get('target_ilvl') else None,
+        'obtained': False,
+        'synced': False
+    }
+
+    char['bis_list'].append(new_item)
+    save_data(data)
+    return jsonify({'success': True, 'item': new_item})
+
+
+@app.route('/api/character/<int:char_id>/bis/<int:bis_id>', methods=['PUT'])
+def update_bis_item(char_id, bis_id):
+    """Update a BiS item (toggle obtained, edit fields)."""
+    data = load_data()
+    char = get_character(data, char_id)
+    if not char:
+        return jsonify({'error': 'Character not found'}), 404
+
+    bis_item = next((item for item in char.get('bis_list', []) if item['id'] == bis_id), None)
+    if not bis_item:
+        return jsonify({'error': 'BiS item not found'}), 404
+
+    updates = request.json
+    if 'obtained' in updates:
+        bis_item['obtained'] = bool(updates['obtained'])
+        if not updates['obtained']:
+            bis_item['synced'] = False
+    if 'item_name' in updates:
+        bis_item['item_name'] = updates['item_name']
+    if 'item_id' in updates:
+        bis_item['item_id'] = int(updates['item_id']) if updates['item_id'] else None
+    if 'target_ilvl' in updates:
+        bis_item['target_ilvl'] = int(updates['target_ilvl']) if updates['target_ilvl'] else None
+
+    save_data(data)
+    return jsonify({'success': True, 'item': bis_item})
+
+
+@app.route('/api/character/<int:char_id>/bis/<int:bis_id>', methods=['DELETE'])
+def delete_bis_item(char_id, bis_id):
+    """Delete a BiS item."""
+    data = load_data()
+    char = get_character(data, char_id)
+    if not char:
+        return jsonify({'error': 'Character not found'}), 404
+
+    char['bis_list'] = [item for item in char.get('bis_list', []) if item['id'] != bis_id]
+    save_data(data)
+    return jsonify({'success': True})
+
+
+@app.route('/api/character/<int:char_id>/talents', methods=['POST'])
+def add_talent_build(char_id):
+    """Add a talent build to a character."""
+    data = load_data()
+    char = get_character(data, char_id)
+    if not char:
+        return jsonify({'error': 'Character not found'}), 404
+
+    if 'talent_builds' not in char:
+        char['talent_builds'] = []
+
+    req_data = request.json
+    category = req_data.get('category', '')
+    name = req_data.get('name', '')
+
+    if not category or not name:
+        return jsonify({'error': 'Category and name are required'}), 400
+
+    max_id = max([build['id'] for build in char['talent_builds']], default=0)
+    new_build = {
+        'id': max_id + 1,
+        'category': category,
+        'name': name,
+        'description': req_data.get('description', ''),
+        'talent_string': req_data.get('talent_string', '')
+    }
+
+    char['talent_builds'].append(new_build)
+    save_data(data)
+    return jsonify({'success': True, 'build': new_build})
+
+
+@app.route('/api/character/<int:char_id>/talents/<int:talent_id>', methods=['PUT'])
+def update_talent_build(char_id, talent_id):
+    """Update a talent build."""
+    data = load_data()
+    char = get_character(data, char_id)
+    if not char:
+        return jsonify({'error': 'Character not found'}), 404
+
+    build = next((b for b in char.get('talent_builds', []) if b['id'] == talent_id), None)
+    if not build:
+        return jsonify({'error': 'Talent build not found'}), 404
+
+    updates = request.json
+    if 'name' in updates:
+        build['name'] = updates['name']
+    if 'description' in updates:
+        build['description'] = updates['description']
+    if 'talent_string' in updates:
+        build['talent_string'] = updates['talent_string']
+    if 'category' in updates:
+        build['category'] = updates['category']
+
+    save_data(data)
+    return jsonify({'success': True, 'build': build})
+
+
+@app.route('/api/character/<int:char_id>/talents/<int:talent_id>', methods=['DELETE'])
+def delete_talent_build(char_id, talent_id):
+    """Delete a talent build."""
+    data = load_data()
+    char = get_character(data, char_id)
+    if not char:
+        return jsonify({'error': 'Character not found'}), 404
+
+    char['talent_builds'] = [b for b in char.get('talent_builds', []) if b['id'] != talent_id]
+    save_data(data)
+    return jsonify({'success': True})
 
 
 @app.route('/api/debug/character/<int:char_id>/stats', methods=['GET'])
