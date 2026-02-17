@@ -2642,3 +2642,182 @@ main {
 .detail-tasks-daily {
   padding: 0;
 }
+
+/* Gear Guide */
+.gear-guide-tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.gear-guide-track-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gear-guide-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gear-guide-card-badge {
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.gear-guide-card-note {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 5px;
+  padding: 6px 8px;
+  font-size: var(--font-size-2xs);
+  color: #FCD34D;
+  line-height: 1.3;
+}
+
+.gear-guide-card-crests {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.gear-guide-crests-label {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.gear-guide-card-ilvls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.gear-guide-rank-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 4px;
+  border: 1px solid var(--border-secondary);
+}
+
+.gear-guide-rank-compact .ilvl-num {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.gear-guide-rank-compact .rank-label {
+  font-size: var(--font-size-2xs);
+  color: var(--text-muted);
+}
+
+.gear-guide-card-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+}
+
+.gear-guide-source-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.gear-guide-source-compact:last-child {
+  border-bottom: none;
+}
+
+.source-name {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-xs);
+}
+
+.source-detail {
+  color: var(--text-muted);
+  font-size: var(--font-size-2xs);
+}
+
+.source-more {
+  color: var(--hool-primary-blue);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 0;
+}
+
+.gear-guide-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.gear-guide-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.gear-guide-section-header h4 {
+  margin: 0;
+  color: var(--hool-light-blue);
+  font-size: var(--font-size-base);
+}
+
+.gear-guide-section-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.gear-guide-upgrade-table-wrap {
+  overflow-x: auto;
+}
+
+.gear-guide-upgrade-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-base);
+}
+
+.gear-guide-upgrade-table th {
+  background: rgba(107, 179, 255, 0.08);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  color: var(--hool-light-blue);
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.gear-guide-upgrade-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.gear-guide-upgrade-table tr:last-child td {
+  border-bottom: none;
+}

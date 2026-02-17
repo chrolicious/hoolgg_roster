@@ -186,6 +186,9 @@ function switchTab(tabName) {
     // Update views
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(tabName).classList.add('active');
+
+    // Render gear guide when tab is active
+    if (tabName === 'gear-guide') renderGearGuide();
 }
 
 // Setup global event listeners
@@ -219,6 +222,173 @@ function setupEventListeners() {
 function renderAll() {
     renderDashboard();
     renderSettings();
+}
+
+// Gear Guide
+function renderGearGuide() {
+    const container = document.getElementById('gearGuideContent');
+    if (!container) return;
+
+    // Track colors
+    const TRACK_COLORS = {
+        'Adventurer': '#9CA3AF',
+        'Veteran':    '#4ADE80',
+        'Champion':   '#60A5FA',
+        'Hero':       '#C084FC',
+        'Mythic':     '#FCD34D'
+    };
+
+    // Full ilvl per rank per track
+    const TRACKS = [
+        {
+            name: 'Adventurer',
+            crests: 'Weathered Dawncrests',
+            ranks: [
+                { rank: '1/6', ilvl: 210 }, { rank: '2/6', ilvl: 213 },
+                { rank: '3/6', ilvl: 216 }, { rank: '4/6', ilvl: 220 },
+                { rank: '5/6', ilvl: 223 }, { rank: '6/6', ilvl: 226 }
+            ],
+            sources: [
+                { content: 'World Quests', detail: 'Varies by zone' },
+                { content: 'Low-level Delves', detail: 'Tier 1–4' },
+            ]
+        },
+        {
+            name: 'Veteran',
+            crests: 'Carved Dawncrests',
+            ranks: [
+                { rank: '1/6', ilvl: 226 }, { rank: '2/6', ilvl: 229 },
+                { rank: '3/6', ilvl: 233 }, { rank: '4/6', ilvl: 236 },
+                { rank: '5/6', ilvl: 239 }, { rank: '6/6', ilvl: 242 }
+            ],
+            sources: [
+                { content: 'M0 Dungeons (Pre-Season)', detail: 'Drops at 3/6 Veteran (233)' },
+                { content: 'Delves (Tier 5–8)', detail: 'Veteran gear' },
+                { content: 'Crafting (Carved Crests)', detail: '5/6 Veteran for 60 crests' },
+            ]
+        },
+        {
+            name: 'Champion',
+            crests: 'Runed Dawncrests',
+            ranks: [
+                { rank: '1/6', ilvl: 242 }, { rank: '2/6', ilvl: 246 },
+                { rank: '3/6', ilvl: 249 }, { rank: '4/6', ilvl: 252 },
+                { rank: '5/6', ilvl: 255 }, { rank: '6/6', ilvl: 259 }
+            ],
+            note: '6/6 Champion ≈ 2/6 Hero — weaker than previous seasons',
+            sources: [
+                { content: 'M0 Dungeons (Season Week 1+)', detail: '1/6 Champion (242)' },
+                { content: 'World Boss', detail: '2/6 Champion (246)' },
+                { content: 'Normal Raid', detail: 'Champion track' },
+                { content: 'Crafting (Runed Crests)', detail: '5/6 Champion for 60 crests' },
+            ]
+        },
+        {
+            name: 'Hero',
+            crests: 'Gilded Dawncrests',
+            ranks: [
+                { rank: '1/6', ilvl: 259 }, { rank: '2/6', ilvl: 262 },
+                { rank: '3/6', ilvl: 266 }, { rank: '4/6', ilvl: 269 },
+                { rank: '5/6', ilvl: 272 }, { rank: '6/6', ilvl: 276 }
+            ],
+            note: 'Do NOT spend Hero crests until after full raid reclear on Week 3',
+            sources: [
+                { content: 'Heroic Raid', detail: 'Hero track drops' },
+                { content: 'M+8', detail: '2/6 Hero' },
+                { content: 'M+10', detail: '3/6 Hero (266)' },
+                { content: 'Bountiful Delves (coffer key)', detail: 'Hero item weekly' },
+                { content: 'Prey Quest', detail: '1 Hero item per week (alt: Delves)' },
+                { content: 'Great Vault (M+)', detail: 'Hero/Myth depending on key' },
+                { content: 'Crafting (Gilded Crests)', detail: '5/6 Hero for 60 crests' },
+            ]
+        },
+        {
+            name: 'Mythic',
+            crests: 'Gilded Dawncrests (Myth)',
+            ranks: [
+                { rank: '1/6', ilvl: 272 }, { rank: '2/6', ilvl: 276 },
+                { rank: '3/6', ilvl: 279 }, { rank: '4/6', ilvl: 282 },
+                { rank: '5/6', ilvl: 285 }, { rank: '6/6', ilvl: 289 }
+            ],
+            note: 'Crafting at 5/6 costs 60 Myth crests — far better value than fully upgrading raid drops',
+            sources: [
+                { content: 'Mythic Raid', detail: 'Mythic track drops' },
+                { content: 'Great Vault (Raid)', detail: '1/6 Mythic (272) — upgrade after crafting' },
+                { content: 'Crafting (Myth Crests)', detail: '5/6 Mythic (285) for 60 crests — craft weapons first' },
+            ]
+        }
+    ];
+
+    // Upgrade cost table (same for all tracks)
+    const UPGRADE_COSTS = [
+        { step: '1/6 → 2/6', crests: 10, total: 10 },
+        { step: '2/6 → 3/6', crests: 20, total: 30 },
+        { step: '3/6 → 4/6', crests: 30, total: 60 },
+        { step: '4/6 → 5/6', crests: 40, total: 100 },
+        { step: '5/6 → 6/6', crests: 50, total: 150 },
+    ];
+
+    container.innerHTML = `
+        <div class="gear-guide-tracks-grid">
+            ${TRACKS.map(track => {
+                const color = TRACK_COLORS[track.name];
+                return `
+                <div class="gear-guide-track-card">
+                    <div class="gear-guide-card-header">
+                        <span class="gear-guide-card-badge" style="background: ${color}22; color: ${color}; border-color: ${color}44">${track.name}</span>
+                    </div>
+                    ${track.note ? `<div class="gear-guide-card-note">${track.note}</div>` : ''}
+                    <div class="gear-guide-card-crests">
+                        <span class="gear-guide-crests-label">${track.crests}</span>
+                    </div>
+                    <div class="gear-guide-card-ilvls">
+                        ${track.ranks.map(r => `
+                            <div class="gear-guide-rank-compact" style="color: ${color}">
+                                <span class="ilvl-num">${r.ilvl}</span>
+                                <span class="rank-label">${r.rank}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="gear-guide-card-sources">
+                        ${track.sources.slice(0, 3).map(s => `
+                            <div class="gear-guide-source-compact">
+                                <span class="source-name">${s.content}</span>
+                                <span class="source-detail">${s.detail}</span>
+                            </div>
+                        `).join('')}
+                        ${track.sources.length > 3 ? `<div class="source-more">+${track.sources.length - 3} more</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+
+        <div class="gear-guide-section">
+            <div class="gear-guide-section-header">
+                <h4>Upgrade Costs & Weekly Cap</h4>
+                <span class="gear-guide-section-hint">Weekly cap: <strong>100 crests</strong> · Crafting: <strong>60 crests at 5/6</strong></span>
+            </div>
+            <div class="gear-guide-upgrade-table-wrap">
+                <table class="gear-guide-upgrade-table">
+                    <thead>
+                        <tr>
+                            <th>Upgrade</th>
+                            <th>Crests</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${UPGRADE_COSTS.map(u => `
+                            <tr>
+                                <td>${u.step}</td>
+                                <td>${u.crests}</td>
+                                <td>${u.total} / 150</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
 }
 
 // Week names for timeline
