@@ -120,8 +120,9 @@ function startFlask() {
 
     flaskProcess.on('error', (err) => {
         console.error(`Failed to start Flask process: ${err.message}`);
+        console.error(`Full error:`, err);
         if (mainWindow) {
-            mainWindow.webContents.send('flask-error', err.message);
+            mainWindow.webContents.send('flask-error', `${err.message}\n\nTrying fallback...`);
         }
     });
 
