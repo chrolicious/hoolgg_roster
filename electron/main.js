@@ -83,34 +83,41 @@ function startFlask() {
     const isPackaged = app.isPackaged;
     const fs = require('fs');
 
-    let pythonPath;
-    let appPath;
+    let appExePath;
 
     if (isPackaged) {
-        // Check if bundled Python exists
-        const bundledPython = path.join(process.resourcesPath, 'python', 'python.exe');
+        // Use bundled app.exe (created with PyInstaller)
+        appExePath = path.join(process.resourcesPath, 'app', 'app.exe');
 
-        if (fs.existsSync(bundledPython)) {
-            // Use bundled Python if available
-            pythonPath = bundledPython;
-            appPath = path.join(process.resourcesPath, 'app', 'app.py');
-        } else {
-            // Fall back to system Python (v0.1.0 - requires Python installed)
-            pythonPath = 'python';
-            appPath = path.join(process.resourcesPath, 'app', 'app.py');
+        if (!fs.existsSync(appExePath)) {
+            console.error('Bundled app.exe not found at:', appExePath);
+            appExePath = null;
         }
     } else {
-        // Development: Use system Python
-        pythonPath = 'python';
-        appPath = path.join(__dirname, '..', 'app.py');
+        // Development: Use app.exe from dist-app folder if available, else fall back to Python
+        appExePath = path.join(__dirname, '..', 'dist-app', 'app.exe');
+        if (!fs.existsSync(appExePath)) {
+            appExePath = null; // Fall back to Python for development
+        }
     }
 
-    console.log('Starting Flask with:', pythonPath, appPath);
-    console.log('Python exists:', fs.existsSync(pythonPath) ? 'Yes' : 'No (will try system Python)');
+    console.log('Starting Flask server...');
+    console.log('Using:', appExePath ? appExePath : 'Python (fallback)');
 
-    flaskProcess = spawn(pythonPath, [appPath], {
-        env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') }
-    });
+    if (appExePath && fs.existsSync(appExePath)) {
+        // Use standalone executable
+        flaskProcess = spawn(appExePath, [], {
+            env: { ...process.env, HOOL_DATA_DIR: app.getPath('userData') }
+        });
+    } else {
+        // Fallback to Python (for development or if app.exe not found)
+        const pythonPath = 'python';
+        const appPath = isPackaged ? path.join(process.resourcesPath, 'app', 'app.py') : path.join(__dirname, '..', 'app.py');
+        console.log('Falling back to Python:', pythonPath, appPath);
+        flaskProcess = spawn(pythonPath, [appPath], {
+            env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') }
+        });
+    }
 
     flaskProcess.on('error', (err) => {
         console.error(`Failed to start Flask process: ${err.message}`);
