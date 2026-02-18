@@ -271,18 +271,11 @@ main {
 
 .logo {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.logo-icon {
-  width: 80px;
-  height: 80px;
-  color: var(--hool-primary-blue);
-  filter: drop-shadow(0 0 10px rgba(107, 179, 255, 0.5));
-}
-
-.logo-text h1 {
+.logo h1 {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   margin: 0;
