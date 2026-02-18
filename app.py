@@ -10,8 +10,13 @@ import sys
 import tempfile
 import time
 from datetime import datetime, timezone, date, timedelta
-from flask import Flask, render_template, jsonify, request
-import requests
+
+try:
+    from flask import Flask, render_template, jsonify, request
+    import requests
+except ImportError as e:
+    print(f"CRITICAL: Failed to import required modules: {e}", file=sys.stderr)
+    sys.exit(1)
 
 # Handle PyInstaller bundles
 if getattr(sys, 'frozen', False):
@@ -1501,4 +1506,17 @@ def debug_character_stats(char_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # When packaged with PyInstaller, run without debug mode
+    is_packaged = getattr(sys, 'frozen', False)
+    debug_mode = not is_packaged and os.environ.get('FLASK_ENV') != 'production'
+
+    print(f"Starting Hool.gg Roster (packaged={is_packaged}, debug={debug_mode})", file=sys.stderr)
+    print(f"Data directory: {_data_dir}", file=sys.stderr)
+
+    try:
+        app.run(debug=debug_mode, port=5000, use_reloader=False)
+    except Exception as e:
+        print(f"FATAL: Flask failed to start: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)

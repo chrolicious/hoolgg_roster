@@ -8,6 +8,7 @@ const axios = require('axios');
 let mainWindow;
 let flaskProcess;
 let tray;
+let flaskErrors = []; // Track Flask errors for better diagnostics
 
 const FLASK_PORT = 5000;
 const FLASK_URL = `http://127.0.0.1:${FLASK_PORT}`;
@@ -69,7 +70,11 @@ function createWindow() {
         console.error('Failed to start Flask:', error);
         // Show error dialog instead of silently quitting
         const { dialog } = require('electron');
-        dialog.showErrorBox('Failed to Start', `Could not start the app. Error:\n${error.message}\n\nMake sure Python 3.8+ is installed and in your PATH.`);
+        let errorDetails = error.message;
+        if (flaskErrors.length > 0) {
+            errorDetails += '\n\nFlask errors:\n' + flaskErrors.slice(-3).join('\n');
+        }
+        dialog.showErrorBox('Failed to Start', `Could not start the app.\n\n${errorDetails}\n\nMake sure Python 3.8+ is installed and in your PATH.`);
         app.quit();
     });
 
@@ -131,11 +136,16 @@ function startFlask() {
     });
 
     flaskProcess.stderr.on('data', (data) => {
-        console.error(`Flask Error: ${data}`);
+        const errorMsg = data.toString();
+        console.error(`Flask Error: ${errorMsg}`);
+        flaskErrors.push(errorMsg);
     });
 
     flaskProcess.on('close', (code) => {
         console.log(`Flask process exited with code ${code}`);
+        if (code !== 0 && flaskErrors.length > 0) {
+            console.error('Flask startup errors:', flaskErrors.join('\n'));
+        }
     });
 }
 
