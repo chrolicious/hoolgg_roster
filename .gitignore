@@ -16,6 +16,11 @@ electron/dist/
 electron/node_modules/
 electron/python-embedded/
 
+# PyInstaller (Python bundles)
+dist-app/
+build/
+*.spec.build/
+
 # IDE
 .vscode/
 .idea/
