@@ -40,3 +40,8 @@ npm-debug.log*
 # Temp files
 *.tmp
 .claude/
+Updated.txt
+electron/python/
+openspec/changes/
+static/*.png
+static/LOG*
