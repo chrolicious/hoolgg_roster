@@ -6,13 +6,22 @@ Part of the Hool.gg gaming tools ecosystem
 
 import json
 import os
+import sys
 import tempfile
 import time
 from datetime import datetime, timezone
 from flask import Flask, render_template, jsonify, request
 import requests
 
-app = Flask(__name__)
+# Handle PyInstaller bundles
+if getattr(sys, 'frozen', False):
+    base_path = sys._MEIPASS
+else:
+    base_path = os.path.dirname(__file__)
+
+app = Flask(__name__,
+    template_folder=os.path.join(base_path, 'templates'),
+    static_folder=os.path.join(base_path, 'static'))
 
 _data_dir = os.environ.get('HOOL_DATA_DIR', os.path.dirname(__file__))
 os.makedirs(_data_dir, exist_ok=True)
