@@ -49,8 +49,8 @@ WEEKLY_TARGETS = {
 
 # Shared public API key — works out of the box for all users.
 # Rate-limited to Blizzard's standard tier. Users can override in Settings.
-DEFAULT_CLIENT_ID = 'YOUR_PUBLIC_CLIENT_ID'
-DEFAULT_CLIENT_SECRET = 'YOUR_PUBLIC_CLIENT_SECRET'
+DEFAULT_CLIENT_ID = 'df5ff56a63e5473197b78704bc50e25d'
+DEFAULT_CLIENT_SECRET = 'zlZpz6ArhOtH8ZRuDh8Yf43t6YwMpuPm'
 
 # Week-specific tasks based on Midnight progression
 WEEKLY_TASKS = {
@@ -214,6 +214,7 @@ def init_default_data():
             "last_updated": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
         },
         "blizzard_config": {
+            "use_shared_credentials": True,
             "client_id": "",
             "client_secret": "",
             "region": "us",
@@ -368,9 +369,17 @@ def get_weekly_crest_cap(week):
 # Blizzard API Integration
 
 def get_blizzard_token(config):
-    """Get OAuth token from Blizzard API. Falls back to shared default key."""
-    client_id = config.get('client_id') or DEFAULT_CLIENT_ID
-    client_secret = config.get('client_secret') or DEFAULT_CLIENT_SECRET
+    """Get OAuth token from Blizzard API. Uses shared or custom credentials based on config."""
+    use_shared = config.get('use_shared_credentials', True)
+
+    if use_shared:
+        # Use shared credentials (not exposed in UI)
+        client_id = DEFAULT_CLIENT_ID
+        client_secret = DEFAULT_CLIENT_SECRET
+    else:
+        # Use custom user-provided credentials
+        client_id = config.get('client_id')
+        client_secret = config.get('client_secret')
 
     if not client_id or not client_secret:
         return None
@@ -928,6 +937,8 @@ def update_blizzard_config():
     data = load_data()
     updates = request.json
 
+    if 'use_shared_credentials' in updates:
+        data['blizzard_config']['use_shared_credentials'] = updates['use_shared_credentials']
     if 'client_id' in updates:
         data['blizzard_config']['client_id'] = updates['client_id']
     if 'client_secret' in updates:

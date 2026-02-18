@@ -26,6 +26,12 @@ function getClassColor(className) {
     return CLASS_COLORS[className] || 'var(--hool-primary-blue)';
 }
 
+// Shared Blizzard API Credentials (not exposed in UI)
+const SHARED_BLIZZARD_CREDENTIALS = {
+    client_id: 'df5ff56a63e5473197b78704bc50e25d',
+    client_secret: 'zlZpz6ArhOtH8ZRuDh8Yf43t6YwMpuPm'
+};
+
 // Crest Icons - Using reliable fallback icons
 const CREST_ICONS = {
     weathered: [
@@ -195,6 +201,9 @@ function switchTab(tabName) {
 function setupEventListeners() {
 
     // Sync all button (handled in renderDashboard since it's dynamic)
+
+    // Shared credentials toggle
+    document.getElementById('useSharedCredentials').addEventListener('change', toggleCredentialsMode);
 
     // Save API config
     document.getElementById('saveApiConfig').addEventListener('click', saveApiConfig);
@@ -1410,8 +1419,22 @@ async function saveCharacterOrder() {
 // Settings
 function renderSettings() {
     // Load API config
-    document.getElementById('clientId').value = appData.blizzard_config.client_id || '';
-    document.getElementById('clientSecret').value = appData.blizzard_config.client_secret || '';
+    const useSharedCheckbox = document.getElementById('useSharedCredentials');
+    const customSection = document.getElementById('customCredentialsSection');
+    const useShared = appData.blizzard_config.use_shared_credentials !== false; // default to true
+
+    useSharedCheckbox.checked = useShared;
+    customSection.style.display = useShared ? 'none' : 'block';
+
+    // Only show custom credentials if not using shared
+    if (!useShared) {
+        document.getElementById('clientId').value = appData.blizzard_config.client_id || '';
+        document.getElementById('clientSecret').value = appData.blizzard_config.client_secret || '';
+    } else {
+        document.getElementById('clientId').value = '';
+        document.getElementById('clientSecret').value = '';
+    }
+
     document.getElementById('region').value = appData.blizzard_config.region || 'us';
 }
 
@@ -1536,13 +1559,38 @@ async function deleteCharacter(charId) {
     }
 }
 
+// Toggle between shared and custom credentials
+function toggleCredentialsMode() {
+    const useSharedCheckbox = document.getElementById('useSharedCredentials');
+    const customSection = document.getElementById('customCredentialsSection');
+    const clientIdInput = document.getElementById('clientId');
+    const clientSecretInput = document.getElementById('clientSecret');
+
+    if (useSharedCheckbox.checked) {
+        // Switching to shared - hide custom fields and clear them
+        customSection.style.display = 'none';
+        clientIdInput.value = '';
+        clientSecretInput.value = '';
+    } else {
+        // Switching to custom - show custom fields
+        customSection.style.display = 'block';
+        clientIdInput.focus();
+    }
+}
+
 // API Config Save
 async function saveApiConfig() {
+    const useShared = document.getElementById('useSharedCredentials').checked;
     const config = {
-        client_id: document.getElementById('clientId').value,
-        client_secret: document.getElementById('clientSecret').value,
+        use_shared_credentials: useShared,
         region: document.getElementById('region').value
     };
+
+    // Only save custom credentials if not using shared mode
+    if (!useShared) {
+        config.client_id = document.getElementById('clientId').value;
+        config.client_secret = document.getElementById('clientSecret').value;
+    }
 
     await saveData('/api/blizzard/config', config);
     showSaveIndicator('API config saved', 'saved');

@@ -78,12 +78,22 @@
                     </p>
                 </div>
                 <div class="form-group">
-                    <label for="clientId">Client ID</label>
-                    <input type="text" id="clientId" placeholder="Enter your Blizzard API Client ID">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                        <input type="checkbox" id="useSharedCredentials" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--hool-primary-blue);">
+                        <label for="useSharedCredentials" style="font-size: var(--font-size-sm); color: var(--text-secondary); cursor: pointer; margin: 0;">
+                            Use shared Blizzard API credentials
+                        </label>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="clientSecret">Client Secret</label>
-                    <input type="password" id="clientSecret" placeholder="Enter your Blizzard API Client Secret">
+                <div id="customCredentialsSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="clientId">Client ID</label>
+                        <input type="text" id="clientId" placeholder="Enter your Blizzard API Client ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientSecret">Client Secret</label>
+                        <input type="password" id="clientSecret" placeholder="Enter your Blizzard API Client Secret">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="region">Region</label>
