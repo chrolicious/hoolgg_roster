@@ -13,6 +13,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --disable-gpu",
+    "prebuild": "node scripts/copy-resources.js",
     "build": "electron-builder build --win --publish never",
     "build:publish": "electron-builder build --win --publish always",
     "postinstall": "electron-builder install-app-deps"
@@ -59,18 +60,8 @@
     ],
     "extraResources": [
       {
-        "from": "../",
-        "to": "app",
-        "filter": [
-          "app.py",
-          "templates/**/*",
-          "static/**/*",
-          "data.json.template"
-        ]
-      },
-      {
-        "from": "../dist-app/app.exe",
-        "to": "app/app.exe"
+        "from": "app-resources",
+        "to": "app"
       }
     ],
     "publish": {
