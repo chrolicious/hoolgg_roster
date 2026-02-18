@@ -64,8 +64,13 @@ function createWindow() {
     waitForFlask().then(() => {
         mainWindow.loadURL(FLASK_URL);
         mainWindow.show();
+        // Open dev console for debugging
+        // mainWindow.webContents.openDevTools();
     }).catch((error) => {
         console.error('Failed to start Flask:', error);
+        // Show error dialog instead of silently quitting
+        const { dialog } = require('electron');
+        dialog.showErrorBox('Failed to Start', `Could not start the app. Error:\n${error.message}\n\nMake sure Python 3.8+ is installed and in your PATH.`);
         app.quit();
     });
 
@@ -101,9 +106,17 @@ function startFlask() {
     }
 
     console.log('Starting Flask with:', pythonPath, appPath);
+    console.log('Python exists:', fs.existsSync(pythonPath) ? 'Yes' : 'No (will try system Python)');
 
     flaskProcess = spawn(pythonPath, [appPath], {
         env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') }
+    });
+
+    flaskProcess.on('error', (err) => {
+        console.error(`Failed to start Flask process: ${err.message}`);
+        if (mainWindow) {
+            mainWindow.webContents.send('flask-error', err.message);
+        }
     });
 
     flaskProcess.stdout.on('data', (data) => {
