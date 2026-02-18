@@ -111,7 +111,7 @@ function startFlask() {
     if (appExePath && fs.existsSync(appExePath)) {
         // Use standalone executable
         flaskProcess = spawn(appExePath, [], {
-            env: { ...process.env, HOOL_DATA_DIR: app.getPath('userData') }
+            env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') }
         });
     } else {
         // Fallback to Python (for development or if app.exe not found)
