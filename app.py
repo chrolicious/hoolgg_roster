@@ -9,7 +9,7 @@ import os
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 from flask import Flask, render_template, jsonify, request
 import requests
 
@@ -66,7 +66,7 @@ WEEKLY_TASKS = {
     0: {
         'name': 'Early Access + Pre-Season (Feb 26 - Mar 16)',
         'weekly': [
-            {'id': 'level_chars', 'label': 'Level all characters to max (90)', 'done': False},
+            {'id': 'level_chars', 'label': 'Level character to max (90)', 'done': False},
             {'id': 'darkmoon', 'label': 'Use Darkmoon Faire for 10% XP/Renown bonus', 'done': False},
             {'id': 'unlock_delves', 'label': 'Unlock Delves to Tier 8+ (Tier 11 if available)', 'done': False},
             {'id': 'm0_tour', 'label': 'Complete M0 dungeon tour for gear (don\'t upgrade)', 'done': False},
@@ -189,6 +189,32 @@ WEEKLY_TASKS = {
 }
 
 # Weeks 10-12 follow same progression pattern as week 9
+
+SEASON_WEEK_DATES = [
+    (0, date(2026, 2, 26)),   # Early Access / Pre-Season
+    (1, date(2026, 3, 17)),   # S1W1 - Heroic Week
+    (2, date(2026, 3, 24)),   # S1W2 - Mythic + M+
+    (3, date(2026, 3, 31)),   # S1W3 - Final Raid
+    (4, date(2026, 4,  7)),
+    (5, date(2026, 4, 14)),
+    (6, date(2026, 4, 21)),
+    (7, date(2026, 4, 28)),
+    (8, date(2026, 5,  5)),
+    (9, date(2026, 5, 12)),   # Week 9+ open-ended
+]
+
+def calculate_current_week(region='us'):
+    """Calculate current season week based on today's date and region."""
+    today = date.today()
+    # EU/KR/TW reset Wednesday = +1 day from Tuesday anchor dates
+    offset = timedelta(days=1) if region in ('eu', 'kr', 'tw') else timedelta(0)
+    current_week = 0
+    for week_num, start_date in SEASON_WEEK_DATES:
+        if today >= (start_date + offset):
+            current_week = week_num
+        else:
+            break
+    return current_week
 
 
 def get_weekly_tasks(week):
@@ -736,6 +762,10 @@ def get_data():
         # Add computed fields
         for char in data['characters']:
             char['avg_ilvl'] = calculate_avg_ilvl(char['gear'])
+
+        # Auto-inject current week based on region
+        region = data.get('blizzard_config', {}).get('region', 'us')
+        data['meta']['current_week'] = calculate_current_week(region)
 
         current_week = data['meta'].get('current_week', 0)
         data['weekly_target'] = get_weekly_target(current_week)

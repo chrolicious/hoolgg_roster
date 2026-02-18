@@ -462,7 +462,7 @@ main {
 /* Dashboard Grid */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 24px;
 }
@@ -1447,7 +1447,7 @@ main {
 /* Responsive */
 @media (max-width: 1099px) {
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .gear-slots {
@@ -1481,6 +1481,10 @@ main {
 
 @media (max-width: 767px) {
   .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-row {
     grid-template-columns: 1fr;
   }
 
@@ -1934,9 +1938,35 @@ main {
   margin-left: 4px;
 }
 
-.compact-task-summary {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+/* Weekly progress bar — compact cards */
+.compact-weekly-progress { margin: 6px 0 4px; }
+.compact-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.compact-progress-pct {
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+}
+.compact-progress-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.compact-progress-fill {
+    height: 100%;
+    background: var(--hool-primary-blue);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+.compact-pace-hint {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 4px;
 }
 
 .compact-crest-summary {
@@ -2044,6 +2074,12 @@ main {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
@@ -2637,10 +2673,63 @@ main {
   font-family: inherit;
 }
 
+.detail-prof-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.detail-prof-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-weight-semibold);
+  min-width: 35px;
+}
+
 /* Detail Tasks */
 .detail-tasks-weekly,
-.detail-tasks-daily {
+.detail-tasks-daily,
+.detail-tasks-suggestions {
   padding: 0;
+}
+
+/* Daily suggestions — detail view */
+.suggestion-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0 0 8px;
+}
+.suggestion-subhint {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 8px 0 6px;
+}
+.suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-secondary);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-dot { color: var(--hool-primary-blue); font-weight: bold; }
+.suggestion-more {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-style: italic;
+}
+.suggestion-done {
+    font-size: var(--font-size-sm);
+    color: #4ADE80;
+    padding: 8px 0;
 }
 
 /* Gear Guide */

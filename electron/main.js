@@ -53,7 +53,6 @@ function createWindow() {
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js')
         },
-        icon: path.join(__dirname, '..', 'static', 'hoolio-logo.png'),
         show: false // Don't show until Flask is ready
     });
 
@@ -154,43 +153,8 @@ async function waitForFlask(maxRetries = 30, delay = 1000) {
 }
 
 function createTray() {
-    const iconPath = path.join(__dirname, '..', 'static', 'hoolio-logo.png');
-    tray = new Tray(iconPath);
-
-    const contextMenu = Menu.buildFromTemplate([
-        {
-            label: 'Show App',
-            click: () => {
-                if (mainWindow) {
-                    mainWindow.show();
-                    mainWindow.focus();
-                }
-            }
-        },
-        {
-            label: 'Check for Updates',
-            click: () => {
-                autoUpdater.checkForUpdates();
-            }
-        },
-        { type: 'separator' },
-        {
-            label: 'Quit',
-            click: () => {
-                app.quit();
-            }
-        }
-    ]);
-
-    tray.setToolTip('Hool.gg Roster');
-    tray.setContextMenu(contextMenu);
-
-    tray.on('click', () => {
-        if (mainWindow) {
-            mainWindow.show();
-            mainWindow.focus();
-        }
-    });
+    // Tray disabled - using text-based app instead of taskbar icon
+    // This can be re-enabled if a logo file is added
 }
 
 // Auto-updater event handlers

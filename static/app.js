@@ -478,6 +478,25 @@ function navigateToOverview() {
     renderDashboard();
 }
 
+// Reset timing helpers
+function getResetInfo() {
+    const region = appData.blizzard_config?.region || 'us';
+    const resetDay = (region === 'us') ? 2 : 3; // Tue=2, Wed=3
+    const resetDayName = (region === 'us') ? 'Tuesday' : 'Wednesday';
+    const today = new Date().getDay();
+    let daysUntilReset = (resetDay - today + 7) % 7;
+    if (daysUntilReset === 0) daysUntilReset = 7; // same day = next week
+    return { daysUntilReset, resetDayName };
+}
+
+function getDailyPaceSuggestion(remaining, daysUntilReset) {
+    if (remaining === 0) return 'done';
+    if (daysUntilReset <= 0) return String(remaining);
+    const low = Math.floor(remaining / daysUntilReset);
+    const high = Math.ceil(remaining / daysUntilReset);
+    return low === high ? String(low) : `${low}-${high}`;
+}
+
 // Dashboard — routes between overview and detail
 function renderDashboard() {
     const container = document.getElementById('dashboard');
@@ -559,11 +578,6 @@ function createCompactCard(char) {
         return charWeekly[t.id];
     }).length;
 
-    const dailyTasks = appData.weekly_tasks?.daily || [];
-    const dailyCompleted = dailyTasks.filter(t => {
-        return char.daily_tasks[t.id];
-    }).length;
-
     // Vault
     const vault = calculateVaultSlots(char.weekly_progress, appData.meta.current_week);
 
@@ -582,6 +596,15 @@ function createCompactCard(char) {
         return `<span class="compact-prof">${p} ${done ? '✓' : '○'}</span>`;
     }).join(' | ');
 
+    const pct = weeklyTasks.length > 0
+        ? Math.round((weeklyCompleted / weeklyTasks.length) * 100) : 0;
+    const { daysUntilReset, resetDayName } = getResetInfo();
+    const remaining = weeklyTasks.length - weeklyCompleted;
+    const pace = getDailyPaceSuggestion(remaining, daysUntilReset);
+    const paceText = pace === 'done'
+        ? '✓ All done this week!'
+        : `${pace}/day to finish by ${resetDayName}`;
+
     card.innerHTML = `
         <div class="compact-header">
             <img src="${avatarUrl}" alt="${char.character_name || char.name}" class="compact-avatar">
@@ -595,7 +618,16 @@ function createCompactCard(char) {
                 </svg>
             </button>
         </div>
-        <div class="compact-task-summary">Weekly: ${weeklyCompleted}/${weeklyTasks.length} · Daily: ${dailyCompleted}/${dailyTasks.length}</div>
+        <div class="compact-weekly-progress">
+            <div class="compact-progress-header">
+                <span class="compact-progress-label">Weekly ${weeklyCompleted}/${weeklyTasks.length}</span>
+                <span class="compact-progress-pct">${pct}%</span>
+            </div>
+            <div class="compact-progress-bar">
+                <div class="compact-progress-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="compact-pace-hint">${paceText} · ${daysUntilReset}d left</div>
+        </div>
         <div class="vault-grid">${renderVaultGrid(vault)}</div>
         <div class="compact-crest-summary">${crestHtml}</div>
         ${profSummary ? `<div class="compact-profession-summary">${profSummary}</div>` : ''}
@@ -653,10 +685,16 @@ function renderDetailView(container, char) {
             <!-- Timeline -->
             <div class="detail-section" id="detailTimeline"></div>
 
-            <!-- Great Vault -->
-            <div class="detail-section">
-                <h3>Great Vault</h3>
-                <div class="vault-grid" id="detailVault"></div>
+            <!-- Tasks -->
+            <div class="detail-section" id="detailTasks"></div>
+
+            <!-- Vault & Crests (side by side) -->
+            <div class="detail-row">
+                <div class="detail-section">
+                    <h3>Great Vault</h3>
+                    <div class="vault-grid" id="detailVault"></div>
+                </div>
+                <div class="detail-section" id="detailCrests"></div>
             </div>
 
             <!-- Equipment -->
@@ -667,12 +705,6 @@ function renderDetailView(container, char) {
 
             <!-- BiS Tracker -->
             <div class="detail-section" id="detailBis"></div>
-
-            <!-- Tasks -->
-            <div class="detail-section" id="detailTasks"></div>
-
-            <!-- Crests -->
-            <div class="detail-section" id="detailCrests"></div>
 
             <!-- Professions -->
             <div class="detail-section" id="detailProfessions"></div>
@@ -692,10 +724,10 @@ function renderDetailView(container, char) {
 
     // Render sub-sections
     renderDetailTimeline(char, currentWeek);
+    renderDetailTasks(char);
     renderDetailVault(char, currentWeek);
     renderDetailGear(char);
     renderBisTracker(char);
-    renderDetailTasks(char);
     renderDetailCrests(char);
     renderDetailProfessions(char);
     renderTalentBuilds(char);
@@ -932,9 +964,9 @@ function renderDetailTasks(char) {
             <h4 style="margin:0 0 8px;">Weekly Tasks</h4>
             ${renderWeeklyTasksForCharacter(char)}
         </div>
-        <div class="detail-tasks-daily" style="margin-top:16px;">
-            <h4 style="margin:0 0 8px;">Daily Tasks</h4>
-            ${renderDailyChecklist(char)}
+        <div class="detail-tasks-suggestions" style="margin-top:16px;">
+            <h4 style="margin:0 0 8px;">Daily Suggestions</h4>
+            ${renderDailySuggestions(char)}
         </div>
     `;
     setupChecklistEvents(container, char.id);
@@ -986,17 +1018,35 @@ function renderDetailProfessions(char) {
             </select>
             ${prog ? `
                 <div class="detail-prof-checks">
-                    <label><input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="weekly_quest" ${prog.weekly_quest ? 'checked' : ''}> Quest</label>
-                    <label><input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="patron_orders" ${prog.patron_orders ? 'checked' : ''}> Orders</label>
-                    <label><input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="treatise" ${prog.treatise ? 'checked' : ''}> Treatise</label>
+                    <label title="Weekly profession quest reward">
+                        <input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="weekly_quest" ${prog.weekly_quest ? 'checked' : ''}>
+                        <span>Weekly Quest</span>
+                    </label>
+                    <label title="Patron orders (reset Wed, separate from weekly reset)">
+                        <input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="patron_orders" ${prog.patron_orders ? 'checked' : ''}>
+                        <span>Patron Orders</span>
+                    </label>
+                    <label title="Treatise acquired">
+                        <input type="checkbox" data-char-id="${char.id}" data-profession="${profName}" data-field="treatise" ${prog.treatise ? 'checked' : ''}>
+                        <span>Treatise</span>
+                    </label>
                 </div>
-                <input type="number" class="detail-prof-input" min="0" value="${prog.knowledge_points}" data-char-id="${char.id}" data-profession="${profName}" data-field="knowledge_points" placeholder="KP">
-                <input type="number" class="detail-prof-input" min="0" max="1000" value="${prog.concentration}" data-char-id="${char.id}" data-profession="${profName}" data-field="concentration" placeholder="Conc">
+                <div class="detail-prof-inputs">
+                    <input type="number" class="detail-prof-input" min="0" value="${prog.knowledge_points}" data-char-id="${char.id}" data-profession="${profName}" data-field="knowledge_points" title="Profession level">
+                    <span class="detail-prof-label">Level</span>
+                    <input type="number" class="detail-prof-input" min="0" max="1000" value="${prog.concentration}" data-char-id="${char.id}" data-profession="${profName}" data-field="concentration" title="Concentration (spent on crafts)">
+                    <span class="detail-prof-label">Conc</span>
+                </div>
             ` : ''}
         </div>`;
     }
 
-    container.innerHTML = `<h3>Professions</h3><div class="detail-prof-list">${html}</div>`;
+    container.innerHTML = `
+        <h3>Professions</h3>
+        <div class="detail-prof-list">
+            ${html}
+        </div>
+    `;
 
     // Wire profession dropdowns
     container.querySelectorAll('.detail-prof-dropdown').forEach(select => {
@@ -1300,6 +1350,38 @@ function renderCrestSummary(char) {
     });
 
     return html;
+}
+
+function renderDailySuggestions(char) {
+    const weeklyTasks = appData.weekly_tasks?.weekly || [];
+    const currentWeek = String(appData.meta.current_week);
+    const charTasks = char.weekly_tasks?.[currentWeek] || {};
+    const remaining = weeklyTasks.filter(t => !charTasks[t.id]);
+    const { daysUntilReset, resetDayName } = getResetInfo();
+
+    if (remaining.length === 0) {
+        return `<p class="suggestion-done">All weekly tasks complete — nothing left to do this week!</p>`;
+    }
+
+    const perDay = Math.ceil(remaining.length / daysUntilReset);
+    const todaysSuggestions = remaining.slice(0, perDay);
+
+    return `
+        <p class="suggestion-hint">
+            ${remaining.length} task${remaining.length !== 1 ? 's' : ''} left ·
+            ${daysUntilReset} day${daysUntilReset !== 1 ? 's' : ''} until ${resetDayName} reset
+        </p>
+        <p class="suggestion-subhint">Suggested for today:</p>
+        ${todaysSuggestions.map(t => `
+            <div class="suggestion-item">
+                <span class="suggestion-dot">•</span>
+                <span>${t.label}</span>
+            </div>
+        `).join('')}
+        ${remaining.length > perDay ? `
+            <p class="suggestion-more">+${remaining.length - perDay} more spread over the next ${daysUntilReset - 1} day${daysUntilReset - 1 !== 1 ? 's' : ''}</p>
+        ` : ''}
+    `;
 }
 
 function renderDailyChecklist(char) {
