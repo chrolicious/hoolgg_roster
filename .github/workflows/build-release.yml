@@ -74,11 +74,140 @@ jobs:
           name: windows-installer
           path: electron/dist/*.exe
 
+  validate:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+
+      - name: Install application silently
+        run: |
+          $installer = Get-ChildItem -Filter "*.exe" | Select-Object -First 1
+          Write-Host "Installing $($installer.Name)..."
+          Start-Process -FilePath $installer.FullName -ArgumentList "/S", "/D=C:\HoolggTest" -Wait
+          Write-Host "Installation complete."
+        shell: powershell
+
+      - name: Verify file structure
+        run: |
+          $base = "C:\HoolggTest"
+          $required = @(
+            "resources\app\app.exe",
+            "resources\app\app.py",
+            "resources\app\templates\index.html",
+            "resources\app\static\app.js",
+            "resources\python\python.exe"
+          )
+          $failed = $false
+          foreach ($file in $required) {
+            $path = Join-Path $base $file
+            if (Test-Path $path) {
+              Write-Host "OK: $file"
+            } else {
+              Write-Host "MISSING: $file"
+              $failed = $true
+            }
+          }
+          if ($failed) {
+            Write-Host ""
+            Write-Host "Listing actual contents:"
+            Get-ChildItem -Path $base -Recurse -Depth 3 | ForEach-Object {
+              Write-Host $_.FullName.Replace($base, "")
+            }
+            exit 1
+          }
+        shell: powershell
+
+      - name: Smoke test app.exe (PyInstaller bundle)
+        run: |
+          $env:HOOL_DATA_DIR = "$env:TEMP\hool-test-data"
+          New-Item -ItemType Directory -Path $env:HOOL_DATA_DIR -Force | Out-Null
+
+          $appExe = "C:\HoolggTest\resources\app\app.exe"
+          Write-Host "Starting app.exe..."
+          $proc = Start-Process -FilePath $appExe -PassThru -WindowStyle Hidden
+
+          $timeout = 15
+          $ready = $false
+          for ($i = 0; $i -lt $timeout; $i++) {
+            Start-Sleep -Seconds 1
+            try {
+              $response = Invoke-WebRequest -Uri "http://127.0.0.1:5000" -UseBasicParsing -TimeoutSec 2
+              if ($response.StatusCode -eq 200) {
+                Write-Host "app.exe responded with HTTP 200 after $($i + 1)s"
+                $ready = $true
+                break
+              }
+            } catch {
+              Write-Host "Waiting... ($($i + 1)s)"
+            }
+          }
+
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 1
+
+          if (-not $ready) {
+            Write-Host "FAIL: app.exe did not respond on port 5000 within ${timeout}s"
+            exit 1
+          }
+          Write-Host "PASS: app.exe smoke test succeeded"
+        shell: powershell
+
+      - name: Smoke test embedded Python fallback
+        run: |
+          $env:HOOL_DATA_DIR = "$env:TEMP\hool-test-data"
+          New-Item -ItemType Directory -Path $env:HOOL_DATA_DIR -Force | Out-Null
+
+          $pythonExe = "C:\HoolggTest\resources\python\python.exe"
+          $appPy = "C:\HoolggTest\resources\app\app.py"
+          Write-Host "Starting embedded Python fallback..."
+          $proc = Start-Process -FilePath $pythonExe -ArgumentList $appPy -PassThru -WindowStyle Hidden
+
+          $timeout = 15
+          $ready = $false
+          for ($i = 0; $i -lt $timeout; $i++) {
+            Start-Sleep -Seconds 1
+            try {
+              $response = Invoke-WebRequest -Uri "http://127.0.0.1:5000" -UseBasicParsing -TimeoutSec 2
+              if ($response.StatusCode -eq 200) {
+                Write-Host "Python fallback responded with HTTP 200 after $($i + 1)s"
+                $ready = $true
+                break
+              }
+            } catch {
+              Write-Host "Waiting... ($($i + 1)s)"
+            }
+          }
+
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 1
+
+          if (-not $ready) {
+            Write-Host "FAIL: Python fallback did not respond on port 5000 within ${timeout}s"
+            exit 1
+          }
+          Write-Host "PASS: Embedded Python fallback smoke test succeeded"
+        shell: powershell
+
+  release:
+    needs: [build, validate]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: electron/dist/*.exe
+          files: "*.exe"
           draft: false
           prerelease: false
         env:
