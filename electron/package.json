@@ -1,6 +1,6 @@
 {
   "name": "hoolgg-roster",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "description": "WoW Character Tracker for Midnight Expansion",
   "main": "main.js",
   "author": "Hool.gg",
@@ -15,7 +15,7 @@
     "dev": "electron . --disable-gpu",
     "prebuild": "node scripts/copy-resources.js",
     "build": "electron-builder build --win --publish never",
-    "build:publish": "electron-builder build --win --publish always",
+    "build:publish": "node scripts/copy-resources.js && electron-builder build --win --publish always",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
