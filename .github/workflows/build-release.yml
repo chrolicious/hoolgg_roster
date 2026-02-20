@@ -28,7 +28,10 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build Flask app with PyInstaller
+        run: pyinstaller app.spec --distpath dist-app
 
       - name: Download Python Embedded
         run: |

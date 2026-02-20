@@ -74,7 +74,7 @@ function createWindow() {
         if (flaskErrors.length > 0) {
             errorDetails += '\n\nFlask errors:\n' + flaskErrors.slice(-3).join('\n');
         }
-        dialog.showErrorBox('Failed to Start', `Could not start the app.\n\n${errorDetails}\n\nMake sure Python 3.8+ is installed and in your PATH.`);
+        dialog.showErrorBox('Failed to Start', `Could not start the app.\n\n${errorDetails}\n\nPlease try reinstalling the application. If the problem persists, report it at https://github.com/chrolicious/hoolgg_roster/issues`);
         app.quit();
     });
 
@@ -114,12 +114,23 @@ function startFlask() {
             env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') }
         });
     } else {
-        // Fallback to Python (for development or if app.exe not found)
-        const pythonPath = 'python';
-        const appPath = isPackaged ? path.join(process.resourcesPath, 'app', 'app.py') : path.join(__dirname, '..', 'app.py');
+        // Fallback: try bundled Python, then system Python
+        const bundledPythonPath = isPackaged
+            ? path.join(process.resourcesPath, 'python', 'python.exe')
+            : null;
+
+        const pythonPath = (bundledPythonPath && fs.existsSync(bundledPythonPath))
+            ? bundledPythonPath
+            : 'python';
+
+        const appPath = isPackaged
+            ? path.join(process.resourcesPath, 'app', 'app.py')
+            : path.join(__dirname, '..', 'app.py');
+
         console.log('Falling back to Python:', pythonPath, appPath);
         flaskProcess = spawn(pythonPath, [appPath], {
-            env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') }
+            env: { ...process.env, FLASK_ENV: 'production', HOOL_DATA_DIR: app.getPath('userData') },
+            windowsHide: true
         });
     }
 
