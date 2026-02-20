@@ -91,7 +91,7 @@ function startFlask() {
 
     if (isPackaged) {
         // Use bundled app.exe (created with PyInstaller)
-        appExePath = path.join(process.resourcesPath, 'app', 'app.exe');
+        appExePath = path.join(process.resourcesPath, 'flask-app', 'app.exe');
 
         if (!fs.existsSync(appExePath)) {
             console.error('Bundled app.exe not found at:', appExePath);
@@ -124,7 +124,7 @@ function startFlask() {
             : 'python';
 
         const appPath = isPackaged
-            ? path.join(process.resourcesPath, 'app', 'app.py')
+            ? path.join(process.resourcesPath, 'flask-app', 'app.py')
             : path.join(__dirname, '..', 'app.py');
 
         console.log('Falling back to Python:', pythonPath, appPath);

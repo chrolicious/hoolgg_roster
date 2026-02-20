@@ -96,10 +96,10 @@ jobs:
         run: |
           $base = "C:\HoolggTest"
           $required = @(
-            "resources\app\app.exe",
-            "resources\app\app.py",
-            "resources\app\templates\index.html",
-            "resources\app\static\app.js",
+            "resources\flask-app\app.exe",
+            "resources\flask-app\app.py",
+            "resources\flask-app\templates\index.html",
+            "resources\flask-app\static\app.js",
             "resources\python\python.exe"
           )
           $failed = $false
@@ -127,7 +127,7 @@ jobs:
           $env:HOOL_DATA_DIR = "$env:TEMP\hool-test-data"
           New-Item -ItemType Directory -Path $env:HOOL_DATA_DIR -Force | Out-Null
 
-          $appExe = "C:\HoolggTest\resources\app\app.exe"
+          $appExe = "C:\HoolggTest\resources\flask-app\app.exe"
           Write-Host "Starting app.exe..."
           $proc = Start-Process -FilePath $appExe -PassThru -WindowStyle Hidden
 
@@ -163,7 +163,7 @@ jobs:
           New-Item -ItemType Directory -Path $env:HOOL_DATA_DIR -Force | Out-Null
 
           $pythonExe = "C:\HoolggTest\resources\python\python.exe"
-          $appPy = "C:\HoolggTest\resources\app\app.py"
+          $appPy = "C:\HoolggTest\resources\flask-app\app.py"
           Write-Host "Starting embedded Python fallback..."
           $proc = Start-Process -FilePath $pythonExe -ArgumentList $appPy -PassThru -WindowStyle Hidden
 

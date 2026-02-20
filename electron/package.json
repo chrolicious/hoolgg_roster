@@ -1,6 +1,6 @@
 {
   "name": "hoolgg-roster",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "WoW Character Tracker for Midnight Expansion",
   "main": "main.js",
   "author": "Hool.gg",
@@ -61,7 +61,7 @@
     "extraResources": [
       {
         "from": "app-resources",
-        "to": "app"
+        "to": "flask-app"
       },
       {
         "from": "python-embedded",
