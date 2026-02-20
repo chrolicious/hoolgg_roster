@@ -3,6 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
+const isCI = !!process.env.CI;
+const missing = [];
+
 // Ensure app-resources directory exists
 const resourcesDir = path.join(__dirname, '..', 'app-resources');
 if (!fs.existsSync(resourcesDir)) {
@@ -15,6 +18,9 @@ const appPyDest = path.join(resourcesDir, 'app.py');
 if (fs.existsSync(appPy)) {
     fs.copyFileSync(appPy, appPyDest);
     console.log('✓ Copied app.py');
+} else {
+    console.warn('⚠ app.py not found at', appPy);
+    missing.push('app.py');
 }
 
 // Copy app.exe
@@ -23,6 +29,9 @@ const appExeDest = path.join(resourcesDir, 'app.exe');
 if (fs.existsSync(appExe)) {
     fs.copyFileSync(appExe, appExeDest);
     console.log('✓ Copied app.exe');
+} else {
+    console.warn('⚠ app.exe not found at', appExe);
+    missing.push('app.exe');
 }
 
 // Copy templates and static folders
@@ -31,6 +40,9 @@ const templatesDest = path.join(resourcesDir, 'templates');
 if (fs.existsSync(templatesSrc)) {
     copyDirSync(templatesSrc, templatesDest);
     console.log('✓ Copied templates');
+} else {
+    console.warn('⚠ templates/ not found at', templatesSrc);
+    missing.push('templates/');
 }
 
 const staticSrc = path.join(__dirname, '..', '..', 'static');
@@ -38,6 +50,15 @@ const staticDest = path.join(resourcesDir, 'static');
 if (fs.existsSync(staticSrc)) {
     copyDirSync(staticSrc, staticDest);
     console.log('✓ Copied static');
+} else {
+    console.warn('⚠ static/ not found at', staticSrc);
+    missing.push('static/');
+}
+
+// In CI, fail the build if required files are missing
+if (isCI && missing.length > 0) {
+    console.error('ERROR: Missing required resources:', missing.join(', '));
+    process.exit(1);
 }
 
 function copyDirSync(src, dest) {

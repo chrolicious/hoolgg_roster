@@ -58,6 +58,16 @@ jobs:
           electron\python-embedded\python.exe -m pip install Flask requests
         shell: powershell
 
+      - name: Verify PyInstaller output
+        run: |
+          if (!(Test-Path "dist-app\app.exe")) {
+            Write-Host "ERROR: PyInstaller did not produce dist-app\app.exe"
+            Get-ChildItem -Path . -Filter "*.exe" -Recurse -Depth 2 | ForEach-Object { Write-Host $_.FullName }
+            exit 1
+          }
+          Write-Host "OK: dist-app\app.exe exists ($(("{0:N2}" -f ((Get-Item 'dist-app\app.exe').Length / 1MB))) MB)"
+        shell: powershell
+
       - name: Install Electron dependencies
         working-directory: electron
         run: npm install
@@ -67,6 +77,24 @@ jobs:
         run: npm run build:publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify app-resources were bundled
+        run: |
+          $dir = "electron\app-resources"
+          $required = @("app.exe", "app.py", "templates\index.html", "static\app.js")
+          $failed = $false
+          foreach ($file in $required) {
+            $p = Join-Path $dir $file
+            if (Test-Path $p) { Write-Host "OK: $file" }
+            else { Write-Host "MISSING: $file"; $failed = $true }
+          }
+          if ($failed) {
+            Write-Host "Contents of ${dir}:"
+            if (Test-Path $dir) { Get-ChildItem $dir -Recurse | ForEach-Object { Write-Host $_.FullName } }
+            else { Write-Host "Directory does not exist!" }
+            exit 1
+          }
+        shell: powershell
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
