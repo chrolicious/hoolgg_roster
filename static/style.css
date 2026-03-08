@@ -2903,3 +2903,116 @@ main {
 .gear-guide-upgrade-table tr:last-child td {
   border-bottom: none;
 }
+
+/* ── Cheat Sheet ─────────────────────────────────────────── */
+#cheatSheetContent h2 {
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
+  margin: 0 0 20px;
+}
+
+.cheat-sheet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.cheat-section-wide {
+  grid-column: 1 / -1;
+}
+
+.cheat-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cheat-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.cheat-section h3 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--hool-light-blue);
+  margin: 0 0 12px;
+}
+
+.cheat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.cheat-table th {
+  background: rgba(107, 179, 255, 0.08);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.cheat-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+}
+
+.cheat-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cheat-table .track-adventurer td,
+.cheat-table td.track-adventurer { color: #9CA3AF; }
+.cheat-table .track-veteran td,
+.cheat-table td.track-veteran    { color: #4ADE80; }
+.cheat-table .track-champion td,
+.cheat-table td.track-champion   { color: #60A5FA; }
+.cheat-table .track-hero td,
+.cheat-table td.track-hero       { color: #C084FC; }
+.cheat-table .track-mythic td,
+.cheat-table td.track-mythic     { color: #FCD34D; }
+
+/* First col (Track name) stays white for row spans */
+.cheat-table .track-adventurer td:first-child,
+.cheat-table .track-veteran td:first-child,
+.cheat-table .track-champion td:first-child,
+.cheat-table .track-hero td:first-child,
+.cheat-table .track-mythic td:first-child { color: var(--text-primary); font-weight: var(--font-weight-semibold); }
+
+.cheat-crest-legend {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.crest-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.crest-adv   { background: #9CA3AF; }
+.crest-vet   { background: #4ADE80; }
+.crest-champ { background: #60A5FA; }
+.crest-hero  { background: #C084FC; }
+.crest-myth  { background: #FCD34D; }
+
+@media (max-width: 900px) {
+  .cheat-sheet-grid { grid-template-columns: 1fr; }
+  .cheat-section-wide { grid-column: 1; }
+}

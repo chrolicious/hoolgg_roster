@@ -66,64 +66,77 @@ WEEKLY_TARGETS = {
 DEFAULT_CLIENT_ID = 'df5ff56a63e5473197b78704bc50e25d'
 DEFAULT_CLIENT_SECRET = 'zlZpz6ArhOtH8ZRuDh8Yf43t6YwMpuPm'
 
-# Week-specific tasks based on Midnight progression
+# Week-specific tasks based on Midnight progression (Larias' Raider Guide)
 WEEKLY_TASKS = {
     0: {
         'name': 'Early Access + Pre-Season (Feb 26 - Mar 16)',
         'weekly': [
-            {'id': 'level_chars', 'label': 'Level character to max (90)', 'done': False},
-            {'id': 'darkmoon', 'label': 'Use Darkmoon Faire for 10% XP/Renown bonus', 'done': False},
-            {'id': 'unlock_delves', 'label': 'Unlock Delves to Tier 8+ (Tier 11 if available)', 'done': False},
-            {'id': 'm0_tour', 'label': 'Complete M0 dungeon tour for gear (don\'t upgrade)', 'done': False},
-            {'id': 'craft_prep', 'label': 'Craft 246 ilvl gear in 3-5 slots (60x Veteran Crests each)', 'done': False},
-            {'id': 'world_quests', 'label': 'Complete world quests for gear', 'done': False},
+            {'id': 'level_char', 'label': 'Level character to max (90)', 'done': False},
+            {'id': 'renown_factions', 'label': 'Raise faction renown: Singularity (7), Hara\'ti (8), Silvermoon & Amani (9)', 'done': False},
+            {'id': 'weekly_dungeon_q', 'label': 'Weekly dungeon quest (Halduron Brightwing)', 'done': False},
+            {'id': 'weekly_world_event', 'label': 'Weekly world event quest (Lady Liadrin)', 'done': False},
+            {'id': 'weekly_world_tour', 'label': 'Weekly world tour quest (Lorthremar)', 'done': False},
+            {'id': 'saltheril', 'label': 'Weekly: Saltheril\'s Soiree (Eversong Woods)', 'done': False},
+            {'id': 'abundance', 'label': 'Weekly: Abundance Event (Zul\'aman)', 'done': False},
+            {'id': 'haranir', 'label': 'Weekly: Legends of the Haranir (Harandar)', 'done': False},
+            {'id': 'stormarion', 'label': 'Weekly: Stormarion Assault (Voidstorm)', 'done': False},
+            {'id': 'zone_rares', 'label': 'Kill each rare once per zone (renown bonus)', 'done': False},
+            {'id': 'unlock_delves', 'label': 'Unlock Delves to Tier 8', 'done': False},
+            {'id': 'hard_prey', 'label': 'Complete 4x Hard Prey', 'done': False},
+            {'id': 'm0_tour', 'label': 'Complete M0 dungeon world tour (do not upgrade gear yet)', 'done': False},
+            {'id': 'spend_adv_crests', 'label': 'Spend Adventurer crests on remaining slots (hold Veteran crests)', 'done': False},
         ],
         'daily': [
-            {'id': 'renown_dmf', 'label': 'Farm Renown (with DMF bonus)', 'done': False},
+            {'id': 'renown_daily', 'label': 'Farm Renown (zone treasures & rares)', 'done': False},
             {'id': 'delve_farming', 'label': 'Farm Delves for gear and crests', 'done': False},
-            {'id': 'prey_quest', 'label': 'Complete Prey if rewards are useful', 'done': False},
         ]
     },
     1: {
         'name': 'Season 1 Week 1 - Heroic Week (Mar 17)',
         'weekly': [
-            {'id': 'lfr_tier', 'label': 'Do LFR for tier pieces (unlock catalyst charges)', 'done': False},
-            {'id': 'm0_tour', 'label': 'Complete M0 tour (items drop at 1/6 Champion 246)', 'done': False},
+            {'id': 'lfr_tier', 'label': 'Do LFR for tier pieces', 'done': False},
+            {'id': 'weekly_world_event', 'label': 'Weekly world event quest (Lady Liadrin)', 'done': False},
+            {'id': 'weekly_housing', 'label': 'Weekly housing quest', 'done': False},
+            {'id': 'nightmare_prey', 'label': 'Complete 2x Nightmare Prey', 'done': False},
             {'id': 'world_boss', 'label': 'Kill world boss (2/6 Champion 250)', 'done': False},
-            {'id': 'crafting', 'label': 'Craft 246 ilvl pieces (3-5 slots) + fill remaining with 233', 'done': False},
-            {'id': 'delves_farm', 'label': 'Farm high-level Delves with coffer keys', 'done': False},
+            {'id': 'bountiful_delves', 'label': 'Do Tier 8 Bountiful Delves', 'done': False},
+            {'id': 'craft_246', 'label': 'Craft 246 ilvl pieces before raid (spend Veteran crests)', 'done': False},
+            {'id': 'spend_crests', 'label': 'Spend all Adv/Vet/Champ crests before raid', 'done': False},
+            {'id': 'heroic_crests_bis', 'label': 'Spend Heroic crests on BiS trinkets', 'done': False},
             {'id': 'normal_clear', 'label': 'Clear Normal raid', 'done': False},
             {'id': 'heroic_clear', 'label': 'Clear Heroic raid', 'done': False},
         ],
         'daily': [
-            {'id': 'prey', 'label': 'Complete Prey if useful', 'done': False},
             {'id': 'world_quests', 'label': 'Complete world quests', 'done': False},
         ]
     },
     2: {
         'name': 'Season 1 Week 2 - Mythic Week + M+ Opens (Mar 24)',
         'weekly': [
-            {'id': 'lfr_tier', 'label': 'Do LFR for tier pieces', 'done': False},
-            {'id': 'world_boss', 'label': 'Kill world boss (2/6 Champion)', 'done': False},
-            {'id': 'delves', 'label': 'Farm high-level Delves with coffer keys (optional)', 'done': False},
-            {'id': 'farm_mplus', 'label': 'Farm +10s (3/6h 266) for vault slots and crests', 'done': False},
+            {'id': 'vault_open', 'label': 'Open Great Vault', 'done': False},
+            {'id': 'lfr_tier', 'label': 'Do LFR if no 4-piece tier yet', 'done': False},
+            {'id': 'weekly_world_event', 'label': 'Weekly world event quest (Lady Liadrin)', 'done': False},
+            {'id': 'weekly_housing', 'label': 'Weekly housing quest', 'done': False},
+            {'id': 'world_boss', 'label': 'Kill world boss (optional)', 'done': False},
+            {'id': 'nightmare_prey', 'label': 'Complete 4x Nightmare Prey (optional)', 'done': False},
+            {'id': 'tier11_delve', 'label': 'Do at least one Tier 11 Delve', 'done': False},
+            {'id': 'farm_mplus', 'label': 'Farm +10s for gear and crests', 'done': False},
+            {'id': 'upgrade_11', 'label': 'Upgrade 11 items from 3/6 to 4/6 (Hero crests)', 'done': False},
             {'id': 'normal_clear', 'label': 'Full clear Normal raid', 'done': False},
             {'id': 'heroic_clear', 'label': 'Full clear Heroic raid', 'done': False},
             {'id': 'mythic_prog', 'label': 'Begin mythic progression', 'done': False},
         ],
-        'daily': [
-            {'id': 'prey', 'label': 'Complete Prey if useful', 'done': False},
-        ]
+        'daily': []
     },
     3: {
         'name': 'Season 1 Week 3 - Final Raid Opens (Mar 31)',
         'weekly': [
-            {'id': 'vault_open', 'label': 'Open vault for 272+ myth item, upgrade AFTER crafting', 'done': False},
+            {'id': 'vault_open', 'label': 'Open vault — upgrade AFTER crafting', 'done': False},
             {'id': 'craft_weapon', 'label': 'Craft 2H mythic weapon at 5/6 285 (60 Myth Crests)', 'done': False},
             {'id': 'lfr_tier', 'label': 'Do LFR for tier if no 4p yet', 'done': False},
             {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
             {'id': 'raid_reclear', 'label': 'Reclear all raids', 'done': False},
-            {'id': 'spend_heroic', 'label': 'Spend heroic crests (after reclear): upgrade 10 items to 4/6 for 300 total', 'done': False},
+            {'id': 'spend_heroic', 'label': 'Spend heroic crests: upgrade 10 items to 4/6 (300 total)', 'done': False},
             {'id': 'upgrade_myth', 'label': 'Upgrade 1/6 272 myth to 4/6 282 (60 crests)', 'done': False},
         ],
         'daily': []
@@ -134,7 +147,7 @@ WEEKLY_TASKS = {
             {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
             {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
             {'id': 'heroic_crests', 'label': 'Upgrade 2x 3/6→4/6 (60c) + 1x 4/6→5/6 (40c) = 100 heroic crests', 'done': False},
-            {'id': 'myth_upgrades', 'label': 'Upgrade your mythic pieces: 1/6→4/6 (60c) + 2/6→4/6 (50c) + 4/6→5/6 (50c)', 'done': False},
+            {'id': 'myth_upgrades', 'label': 'Mythic upgrades: 1/6→4/6 (60c) + 2/6→4/6 (50c) + 4/6→5/6 (50c)', 'done': False},
         ],
         'daily': []
     },
@@ -144,7 +157,7 @@ WEEKLY_TASKS = {
             {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
             {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
             {'id': 'craft_second', 'label': 'Craft second item at 5/6 285 mythic (60 crests)', 'done': False},
-            {'id': 'heroic_crests', 'label': 'Upgrade 2x 4/6→5/6 items with 80 heroic crests', 'done': False},
+            {'id': 'heroic_crests', 'label': 'Upgrade 2x 4/6→5/6 with 80 heroic crests', 'done': False},
             {'id': 'myth_upgrade', 'label': 'Upgrade 1/6 272→4/6 282 mythic (60 crests)', 'done': False},
         ],
         'daily': []
@@ -154,8 +167,8 @@ WEEKLY_TASKS = {
         'weekly': [
             {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
             {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
-            {'id': 'heroic_crests', 'label': 'Upgrade 3x 4/6→5/6 items with 120 heroic crests', 'done': False},
-            {'id': 'myth_upgrade', 'label': 'Upgrade 1/6→4/6 (30c) + 3/6→4/6 (30c) mythic = 60 crests', 'done': False},
+            {'id': 'heroic_crests', 'label': 'Upgrade 3x 4/6→5/6 with 120 heroic crests', 'done': False},
+            {'id': 'myth_upgrade', 'label': 'Mythic: 1/6→4/6 (30c) + 3/6→4/6 (30c) = 60 crests', 'done': False},
         ],
         'daily': []
     },
@@ -165,7 +178,7 @@ WEEKLY_TASKS = {
             {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
             {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
             {'id': 'craft_third', 'label': 'Craft third item at 5/6 285 mythic (60 crests)', 'done': False},
-            {'id': 'heroic_crests', 'label': 'Upgrade 2x 4/6→5/6 items with 80 heroic crests', 'done': False},
+            {'id': 'heroic_crests', 'label': 'Upgrade 2x 4/6→5/6 with 80 heroic crests', 'done': False},
             {'id': 'myth_upgrade', 'label': 'Upgrade 1/6→3/6 279 mythic (30 crests)', 'done': False},
         ],
         'daily': []
@@ -175,8 +188,8 @@ WEEKLY_TASKS = {
         'weekly': [
             {'id': 'vault', 'label': 'Open vault for 272+ myth item', 'done': False},
             {'id': 'farm_m12', 'label': 'Farm +12s for vault slots and crests', 'done': False},
-            {'id': 'heroic_final', 'label': 'Upgrade 2x 5/6→6/6 items with 100 heroic crests (DONE with heroic)', 'done': False},
-            {'id': 'myth_upgrades', 'label': 'Mythic: 1/6→2/6 (10c) + 3x 2/6→3/6 (60c) + 1x 3/6→4/6 (30c) = 100 crests', 'done': False},
+            {'id': 'heroic_final', 'label': 'Upgrade 2x 5/6→6/6 with 100 heroic crests (DONE with heroic)', 'done': False},
+            {'id': 'myth_upgrades', 'label': 'Mythic: 1/6→2/6 (10c) + 3x 2/6→3/6 (60c) + 3/6→4/6 (30c) = 100 crests', 'done': False},
         ],
         'daily': []
     },
@@ -184,10 +197,10 @@ WEEKLY_TASKS = {
         'name': 'Season 1 Week 9+ - Final Optimization (May 12+)',
         'weekly': [
             {'id': 'vault', 'label': 'Open vault and optimize picks', 'done': False},
-            {'id': 'farm_m12', 'label': 'Farm +12s and optimally use crests', 'done': False},
+            {'id': 'farm_m12', 'label': 'Farm +12s and use crests optimally', 'done': False},
             {'id': 'craft_remaining', 'label': 'Craft remaining slots at 5/6 mythic (60c each)', 'done': False},
             {'id': 'push_282', 'label': 'Get every item to at least 4/6 282 mythic', 'done': False},
-            {'id': 'upgrade_286', 'label': 'Start upgrading to 5/6 285 and 6/6 289', 'done': False},
+            {'id': 'upgrade_286', 'label': 'Upgrade to 5/6 285 and 6/6 289', 'done': False},
         ],
         'daily': []
     },

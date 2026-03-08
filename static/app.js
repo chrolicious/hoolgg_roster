@@ -195,6 +195,7 @@ function switchTab(tabName) {
 
     // Render gear guide when tab is active
     if (tabName === 'gear-guide') renderGearGuide();
+    if (tabName === 'cheat-sheet') renderCheatSheet();
 }
 
 // Setup global event listeners
@@ -464,6 +465,139 @@ function renderVaultGrid(vault) {
             ).join('')}
         </div>`;
     }).join('');
+}
+
+function renderCheatSheet() {
+    const container = document.getElementById('cheatSheetContent');
+    if (!container || container.dataset.rendered) return;
+    container.dataset.rendered = '1';
+
+    container.innerHTML = `
+        <h2>Midnight Season 1 — Item Level Reference</h2>
+        <div class="cheat-sheet-grid">
+
+            <!-- Upgrade Tracks -->
+            <div class="cheat-section cheat-section-wide">
+                <h3>Upgrade Tracks</h3>
+                <table class="cheat-table">
+                    <thead>
+                        <tr><th>Track</th><th>Rank</th><th>ilvl</th><th>Crests</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="track-adventurer"><td rowspan="4">Adventurer</td><td>1/6</td><td>220</td><td>—</td><td>—</td></tr>
+                        <tr class="track-adventurer"><td>2/6</td><td>224</td><td>Adventurer</td><td>20</td></tr>
+                        <tr class="track-adventurer"><td>3/6</td><td>227</td><td>Adventurer</td><td>20</td></tr>
+                        <tr class="track-adventurer"><td>4/6</td><td>230</td><td>Adventurer</td><td>20</td></tr>
+                        <tr class="track-veteran"><td rowspan="4">Veteran</td><td>1/6 (Adv 5)</td><td>233</td><td>Adventurer</td><td>20</td></tr>
+                        <tr class="track-veteran"><td>2/6 (Adv 6)</td><td>237</td><td>Adv or Veteran</td><td>20</td></tr>
+                        <tr class="track-veteran"><td>3/6</td><td>240</td><td>Veteran</td><td>20</td></tr>
+                        <tr class="track-veteran"><td>4/6</td><td>243</td><td>Veteran</td><td>20</td></tr>
+                        <tr class="track-champion"><td rowspan="4">Champion</td><td>1/6 (Vet 5)</td><td>246</td><td>Veteran</td><td>20</td></tr>
+                        <tr class="track-champion"><td>2/6 (Vet 6)</td><td>250</td><td>Vet or Champion</td><td>20</td></tr>
+                        <tr class="track-champion"><td>3/6</td><td>253</td><td>Champion</td><td>20</td></tr>
+                        <tr class="track-champion"><td>4/6</td><td>256</td><td>Champion</td><td>20</td></tr>
+                        <tr class="track-hero"><td rowspan="4">Hero</td><td>1/6 (Champ 5)</td><td>259</td><td>Champion</td><td>20</td></tr>
+                        <tr class="track-hero"><td>2/6 (Champ 6)</td><td>263</td><td>Champ or Hero</td><td>20</td></tr>
+                        <tr class="track-hero"><td>3/6</td><td>266</td><td>Hero</td><td>20</td></tr>
+                        <tr class="track-hero"><td>4/6</td><td>269</td><td>Hero</td><td>20</td></tr>
+                        <tr class="track-mythic"><td rowspan="4">Mythic</td><td>1/6 (Hero 5)</td><td>272</td><td>Hero</td><td>20</td></tr>
+                        <tr class="track-mythic"><td>2/6 (Hero 6)</td><td>276</td><td>Hero or Myth</td><td>20</td></tr>
+                        <tr class="track-mythic"><td>3/6</td><td>279</td><td>Myth</td><td>20</td></tr>
+                        <tr class="track-mythic"><td>4/6</td><td>282</td><td>Myth</td><td>20</td></tr>
+                        <tr class="track-mythic"><td></td><td>5/6</td><td>285</td><td>Myth</td><td>20</td></tr>
+                        <tr class="track-mythic"><td></td><td>6/6</td><td>289</td><td>Myth</td><td>20</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Right column: Crafted + Raid -->
+            <div class="cheat-col">
+
+                <!-- Crafted -->
+                <div class="cheat-section">
+                    <h3>Crafted Item Levels</h3>
+                    <table class="cheat-table">
+                        <thead><tr><th>Adv</th><th>Vet</th><th>Champ</th><th>Hero</th><th>Myth</th></tr></thead>
+                        <tbody>
+                            <tr class="multi-track">
+                                <td class="track-adventurer">220</td>
+                                <td class="track-veteran">233</td>
+                                <td class="track-champion">246</td>
+                                <td class="track-hero">259</td>
+                                <td class="track-mythic">272</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Raid -->
+                <div class="cheat-section">
+                    <h3>Raid Item Levels</h3>
+                    <table class="cheat-table">
+                        <thead><tr><th>Difficulty</th><th>Early</th><th>Mid</th><th>Late</th><th>End</th></tr></thead>
+                        <tbody>
+                            <tr><td>LFR</td><td>233</td><td>237</td><td>240</td><td>243</td></tr>
+                            <tr><td>Normal</td><td>246</td><td>250</td><td>253</td><td>256</td></tr>
+                            <tr class="track-hero"><td>Heroic</td><td>259</td><td>263</td><td>266</td><td>269</td></tr>
+                            <tr class="track-mythic"><td>Mythic</td><td>272</td><td>276</td><td>279</td><td>282</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Dungeons -->
+            <div class="cheat-section">
+                <h3>Dungeon Item Levels</h3>
+                <table class="cheat-table">
+                    <thead><tr><th>Level</th><th>Loot</th><th>Vault</th><th>Crest Reward</th></tr></thead>
+                    <tbody>
+                        <tr><td>Heroic</td><td>230</td><td>243</td><td>Champion ×?</td></tr>
+                        <tr><td>Mythic</td><td>246</td><td>256</td><td>Champion ×?</td></tr>
+                        <tr><td>M+2</td><td>250</td><td>259</td><td class="track-hero">Hero ×10</td></tr>
+                        <tr><td>M+3</td><td>250</td><td>259</td><td class="track-hero">Hero ×12</td></tr>
+                        <tr><td>M+4</td><td>253</td><td>263</td><td class="track-hero">Hero ×14</td></tr>
+                        <tr><td>M+5</td><td>256</td><td>263</td><td class="track-hero">Hero ×16</td></tr>
+                        <tr><td>M+6</td><td>259</td><td>266</td><td class="track-hero">Hero ×18</td></tr>
+                        <tr><td>M+7</td><td>259</td><td>269</td><td class="track-mythic">Myth ×10</td></tr>
+                        <tr><td>M+8</td><td>263</td><td>269</td><td class="track-mythic">Myth ×12</td></tr>
+                        <tr><td>M+9</td><td>263</td><td>269</td><td class="track-mythic">Myth ×14</td></tr>
+                        <tr><td>M+10</td><td>266</td><td>272</td><td class="track-mythic">Myth ×16</td></tr>
+                        <tr><td>M+11</td><td>266</td><td>272</td><td class="track-mythic">Myth ×18</td></tr>
+                        <tr><td>M+12</td><td>266</td><td>272</td><td class="track-mythic">Myth ×20</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Delves -->
+            <div class="cheat-section">
+                <h3>Bountiful Delve Item Levels</h3>
+                <table class="cheat-table">
+                    <thead><tr><th>Tier</th><th>Loot</th><th>Map</th><th>Vault</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>220</td><td>—</td><td>233</td></tr>
+                        <tr><td>2</td><td>224</td><td>n/a</td><td>237</td></tr>
+                        <tr><td>3</td><td>227</td><td>—</td><td>240</td></tr>
+                        <tr><td>4</td><td>230</td><td>237</td><td>243</td></tr>
+                        <tr><td>5</td><td>233</td><td>243</td><td>246</td></tr>
+                        <tr><td>6</td><td>237</td><td>250</td><td>253</td></tr>
+                        <tr><td>7</td><td>250</td><td>256</td><td>256</td></tr>
+                        <tr><td>8</td><td>—</td><td>—</td><td>—</td></tr>
+                        <tr><td>9</td><td>—</td><td>—</td><td>—</td></tr>
+                        <tr class="track-mythic"><td>10</td><td>250</td><td>259</td><td>259</td></tr>
+                        <tr><td>11</td><td>—</td><td>—</td><td>—</td></tr>
+                    </tbody>
+                </table>
+                <div class="cheat-crest-legend">
+                    <div><span class="crest-dot crest-adv"></span> Adventurer Dawncrest (224–237) — Adventurer of the Dawn</div>
+                    <div><span class="crest-dot crest-vet"></span> Veteran Dawncrest (237–250) — Veteran of the Dawn</div>
+                    <div><span class="crest-dot crest-champ"></span> Champion Dawncrest (250–263) — Champion of the Dawn</div>
+                    <div><span class="crest-dot crest-hero"></span> Hero Dawncrest (263–276) — Hero of the Dawn</div>
+                    <div><span class="crest-dot crest-myth"></span> Myth Dawncrest (276–289)</div>
+                </div>
+            </div>
+
+        </div>
+    `;
 }
 
 function navigateToDetail(charId) {
@@ -1692,16 +1826,22 @@ async function syncCharacter(charId, btn) {
         if (result.success) {
             showSaveIndicator('Gear synced', 'saved');
             await loadData();
+            // Scroll to top so user sees updated header ilvl and gear
+            document.querySelector('.detail-view, #dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             showSaveIndicator(result.error || 'Sync failed', 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.querySelector('svg') ? btn.querySelector('svg').style.opacity = '1' : null;
+            }
         }
     } catch (error) {
         showSaveIndicator('Sync failed', 'error');
-    }
-
-    if (btn) {
-        btn.disabled = false;
-        btn.querySelector('svg') ? btn.querySelector('svg').style.opacity = '1' : null;
+        if (btn) {
+            btn.disabled = false;
+            btn.querySelector('svg') ? btn.querySelector('svg').style.opacity = '1' : null;
+        }
     }
 }
 
